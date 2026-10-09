@@ -8,6 +8,14 @@ repository-code: "https://github.com/DrMurphyIsIn/qrh-debruijn-newman"
 license: Apache-2.0
 version: v1.0.0
 date-released: 2026-10-09
+doi: 10.5281/zenodo.23269135
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.23269135
+    description: "Zenodo archive of release v1.0.0"
+  - type: doi
+    value: 10.5281/zenodo.23269134
+    description: "Zenodo concept DOI (all versions; resolves to the latest)"
 keywords:
   - de Bruijn-Newman constant
   - Riemann zeta function

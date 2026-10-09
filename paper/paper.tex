@@ -48,7 +48,7 @@
 \title{A kernel-checked bound $\Lam \le 9/32$ for the de Bruijn--Newman constant\\
 from OpenAI's quasi-Riemann hypothesis}
 \author{Peter W. Murphy}
-\date{October 9, 2026}
+\date{October 9, 2026\\[2pt] \small Repository \url{https://github.com/DrMurphyIsIn/qrh-debruijn-newman} \;$\cdot$\; DOI \url{https://doi.org/10.5281/zenodo.23269135}}
 
 \begin{document}
 \maketitle
@@ -77,7 +77,7 @@ Then $\Hfun_0(z) = \tfrac18\,\xi\!\left(\tfrac12 + \tfrac{iz}{2}\right)$, so the
 \]
 is a well-defined real number, the de Bruijn--Newman constant, and he conjectured $\Lam \ge 0$. Rodgers and Tao \cite{RT} proved Newman's conjecture in 2018. Together with de Bruijn's upper bound this places $\Lam$ in $[0, 1/2]$, and the Riemann Hypothesis is exactly the statement $\Lam = 0$.
 
-The lower bounds have come from Lehmer pairs, consecutive zeros of $\zeta$ that lie anomalously close together, and they have converged on zero from below: $\Lam > -50$ (Csordas, Norfolk and Varga \cite{CNV}), $\Lam > -0.385$ (Csordas, Smith and Varga \cite{CSV}), $\Lam > -2.7 \times 10^{-9}$ (Odlyzko \cite{Od}), $\Lam > -1.15 \times 10^{-11}$ (Saouter, Gourdon and Demichel \cite{SGD}), and then Rodgers and Tao's $\Lam \ge 0$. The upper bounds have moved more slowly. De Bruijn's $1/2$ stood for almost sixty years before Ki, Kim and Lee \cite{KKL} made it strict. The Polymath15 project \cite{P15} proved $\Lam \le 0.22$ in 2019, and Platt and Trudgian \cite{PT} proved $\Lam \le 0.2$ in 2021. Both of the last two are computer-assisted: they combine rigorous numerical evaluation of $\Hfun_t$ at large height with analytic estimates, and the computations live outside any proof assistant.
+The lower bounds have come from Lehmer pairs, consecutive zeros of $\zeta$ that lie anomalously close together, and they have converged on zero from below: $\Lam > -50$ (Csordas, Norfolk and Varga \cite{CNV}), successive improvements through Lehmer pairs (Csordas, Smith and Varga \cite{CSV} and others), $\Lam > -2.7 \times 10^{-9}$ (Odlyzko \cite{Od}), $\Lam > -1.15 \times 10^{-11}$ (Saouter, Gourdon and Demichel \cite{SGD}), and then Rodgers and Tao's $\Lam \ge 0$. The upper bounds have moved more slowly. De Bruijn's $1/2$ stood for almost sixty years before Ki, Kim and Lee \cite{KKL} made it strict. The Polymath15 project \cite{P15} proved $\Lam \le 0.22$ in 2019, and Platt and Trudgian \cite{PT} proved $\Lam \le 0.2$ in 2021. Both of the last two are computer-assisted: they combine rigorous numerical evaluation of $\Hfun_t$ at large height with analytic estimates, and the computations live outside any proof assistant.
 
 \subsection{The theorem}
 
@@ -430,7 +430,7 @@ The theorem $\zeta(s) \ne 0$ for $\re s > 7/8$ is OpenAI's \cite{OAIqrh,OAImath}
 
 \bibitem{Arda} P.~W. Murphy, Arda: the Telperion engine and the missions registry, \url{https://github.com/DrMurphyIsIn/Arda}. The \texttt{dbn} island is \texttt{telperion/examples/dbn/lean}; the bridge island is \texttt{telperion/examples/oai\_qrh\_bridge}; the registry nodes are \texttt{RH\_dbn\_real\_zeros\_of\_zeta\_halfplane}, \texttt{RH\_dbn\_real\_zeros\_of\_qrh}, \texttt{RH\_zeta\_zero\_free\_seven\_eighths} and \texttt{RH\_dbn\_real\_zeros\_nine\_thirtyseconds} in \texttt{telperion/missions/rh}.
 
-\bibitem{Repo} P.~W. Murphy, \texttt{qrh-debruijn-newman}: Lean sources, scripts, audit records and this paper, \url{https://github.com/DrMurphyIsIn/qrh-debruijn-newman}, v1.0.0 (2026). Zenodo DOI to be inserted on publication.
+\bibitem{Repo} P.~W. Murphy, \texttt{qrh-debruijn-newman}: Lean sources, scripts, audit records and this paper, \url{https://github.com/DrMurphyIsIn/qrh-debruijn-newman}, v1.0.0 (2026), archived at Zenodo, \url{https://doi.org/10.5281/zenodo.23269135} (this version) and \url{https://doi.org/10.5281/zenodo.23269134} (all versions).
 
 \bibitem{LiCrit} N.~Bulka, \texttt{li-criterion-rh-equivalence-lean}, commit \texttt{35df682f}, Apache License 2.0. \url{https://github.com/nicholasbulka/li-criterion-rh-equivalence-lean}.
 

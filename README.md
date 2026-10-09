@@ -1,5 +1,7 @@
 # Λ ≤ 9/32, kernel-checked
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23269134.svg)](https://doi.org/10.5281/zenodo.23269134)
+
 The de Bruijn–Newman constant Λ is a single real number that encodes the Riemann Hypothesis.
 Take the Riemann ξ function, write it as a Fourier transform, and let that transform evolve
 under the backward heat equation for time t. For each t you get an entire function H_t, and
@@ -91,7 +93,7 @@ honestly. One number from the paper is worth keeping in mind: a zero-free half-p
 
 ## The paper
 
-`paper/paper.pdf`, CC-BY-4.0. It states the two theorems as formalized, walks through the
+`paper/paper.pdf`, CC-BY-4.0; archived with this repository at Zenodo, DOI [10.5281/zenodo.23269135](https://doi.org/10.5281/zenodo.23269135) for v1.0.0 and [10.5281/zenodo.23269134](https://doi.org/10.5281/zenodo.23269134) for all versions. It states the two theorems as formalized, walks through the
 composition, documents the cross-pin seam and the single-pin port, lays out the verification
 chain with a trust table, and says plainly what is and is not established.
 
