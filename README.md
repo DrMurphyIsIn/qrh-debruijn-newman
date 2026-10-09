@@ -97,6 +97,9 @@ honestly. One number from the paper is worth keeping in mind: a zero-free half-p
 composition, documents the cross-pin seam and the single-pin port, lays out the verification
 chain with a trust table, and says plainly what is and is not established.
 
+The arXiv source package is `paper/arxiv.tar.gz` and the submission metadata is in `paper/ARXIV.md`;
+the arXiv identifier will be added here once assigned.
+
 ## Reproducing it
 
 You need Lean 4 (elan), about 25 GB of disk, and a few CPU-hours the first time.
