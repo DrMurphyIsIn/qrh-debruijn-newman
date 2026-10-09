@@ -1,0 +1,27 @@
+# Comparator runs, local Mac, NOT sandboxed (landrun pass-through shim), nanoda ON. 2026-10-07.
+
+## comparator_qrh_seven_eighths
+Exporting #[...] from ArdaQRHBridge
+Exporting #[...] from ArdaQRHBridge
+nanoda kernel accepts the solution
+Lean default kernel accepts the solution
+Your solution is okay!
+      516.18 real       612.10 user        25.56 sys
+          9446866944  maximum resident set size
+EXIT 0
+
+## comparator_unconditional
+Exporting #[...] from ArdaDBNChallenge
+Exporting #[...] from ArdaDBNUnconditional
+nanoda kernel accepts the solution
+Lean default kernel accepts the solution
+Your solution is okay!
+      473.46 real       526.55 user        31.98 sys
+          9146286080  maximum resident set size
+EXIT 0
+
+## comparator_negative_control
+Exporting #[...] from ArdaDBNChallengeTampered
+Exporting #[...] from ArdaDBNUnconditional
+uncaught exception: Const does not match between challenge and target 'DBN.Φ'
+EXIT 1

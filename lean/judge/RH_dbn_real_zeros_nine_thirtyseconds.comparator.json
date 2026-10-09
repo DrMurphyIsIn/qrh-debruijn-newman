@@ -1,0 +1,13 @@
+{
+  "challenge_module": "MissionChallenges.RH_dbn_real_zeros_nine_thirtyseconds",
+  "solution_module": "MissionChallenges.RH_dbn_real_zeros_nine_thirtyseconds",
+  "theorem_names": [
+    "MissionJudge.RH_dbn_real_zeros_nine_thirtyseconds"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": true
+}

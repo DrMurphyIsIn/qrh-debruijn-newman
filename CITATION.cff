@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below, and cite OpenAI's quasi-Riemann hypothesis preprint for the 7/8 half-plane."
+title: "A kernel-checked bound Lambda <= 9/32 for the de Bruijn-Newman constant from OpenAI's quasi-Riemann hypothesis"
+authors:
+  - family-names: Murphy
+    given-names: Peter W.
+repository-code: "https://github.com/DrMurphyIsIn/qrh-debruijn-newman"
+license: Apache-2.0
+version: v1.0.0
+date-released: 2026-10-09
+keywords:
+  - de Bruijn-Newman constant
+  - Riemann zeta function
+  - zero-free region
+  - quasi-Riemann hypothesis
+  - Lean 4
+  - formal verification
+  - Comparator
+abstract: >-
+  OpenAI's kernel-checked theorem that the Riemann zeta function has no zero with real part greater than 7/8
+  is composed with de Bruijn's 1950 heat-flow theorem, as formalized on the Arda dbn island, in a single Lean 4
+  environment at OpenAI's Mathlib pin. The result, every zero of H_t is real for every t >= 9/32, is classically
+  Lambda <= 9/32 for the de Bruijn-Newman constant: the first bound below de Bruijn's 1/2 that is machine-checked
+  end to end, re-checked by a second kernel (nanoda, via Comparator), independently audited and judged against a
+  registered statement. It is weaker than the numerical bounds 0.22 and 0.2, and it is not the Riemann Hypothesis.

@@ -1,0 +1,13 @@
+{
+  "challenge_module": "MissionChallenges.RH_zeta_zero_free_seven_eighths",
+  "solution_module": "MissionChallenges.RH_zeta_zero_free_seven_eighths",
+  "theorem_names": [
+    "MissionJudge.RH_zeta_zero_free_seven_eighths"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": true
+}

@@ -1,0 +1,48 @@
+created = "2026-10-07"
+depends_on = ["RH_dbn_real_zeros_of_zeta_halfplane"]
+kind = "lemma"
+name = "RH.dbn_real_zeros_of_qrh"
+statement_module = "Statements.RH_dbn_real_zeros_of_qrh"
+status = "proved"
+title = "QRH hypothesis (zeta != 0 on Re s > 7/8, OpenAI's statement with the binder closed) => every zero of H_t is real for t >= 9/32 (conditional; not RH). dbn island. conjecture1_proved = False"
+updated = "2026-10-09"
+
+[author]
+date = "2026-10-07"
+identity = "dr.murphy.is.in@arda-dao.com"
+session = "session_01T6sQ9By6CuBoffW7BYPHJT"
+
+[comparator]
+artifact_sha256 = "a0670d8da5fc7e0f16be2de469674bb5ee9ae95af545c0b208e4fad973ff2f8a"
+date = "2026-10-09"
+head_check = "matched"
+job_id = "113903816248"
+job_url = "https://github.com/DrMurphyIsIn/Arda/actions/runs/37955041118/job/113903816248"
+judged_head_sha = "b96be4b5d6e4407af32c9971a50cf7233fc93a55"
+kernel_mode = "nanoda"
+log_check = "verified"
+run_id = "37955041118"
+run_url = "https://github.com/DrMurphyIsIn/Arda/actions/runs/37955041118"
+theorem = "dbn_real_zeros_of_qrh"
+
+[grant]
+artifact_sha256 = "a0670d8da5fc7e0f16be2de469674bb5ee9ae95af545c0b208e4fad973ff2f8a"
+date = "2026-10-09"
+gate_version = "2026-09-23.1"
+identity = "dr.murphy.is.in@arda-dao.com"
+session = "session_01T6sQ9By6CuBoffW7BYPHJT"
+statement_sha256 = "3ac9c650e0b63ef2f4a980c9fcdc4b370aa3ca4e2af067edfdb8ed8170dc7026"
+
+[proof]
+artifact = "../../examples/dbn/lean/DBNZeroFreeHalfplane.lean"
+artifact_kind = "lean_module"
+closure_clean = true
+via = "direct"
+
+[readback]
+auditor = "petermurphy@mountainviewdirectcare.com"
+auditor_identity = "petermurphy@mountainviewdirectcare.com"
+auditor_session = "operator-2026-10-09"
+date = "2026-10-09"
+independence = "independent"
+text = "Operator read-back. If zeta has no zero with real part greater than 7/8 (OpenAI's quasi-Riemann hypothesis with its implicit binder closed), then for every real t at least 9/32 and every complex z with H_t(z) = 0, Im z = 0. Conditional; not RH."

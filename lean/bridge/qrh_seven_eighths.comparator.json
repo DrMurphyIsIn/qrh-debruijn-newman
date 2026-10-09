@@ -1,0 +1,13 @@
+{
+  "challenge_module": "ArdaQRHBridge",
+  "solution_module": "ArdaQRHBridge",
+  "theorem_names": [
+    "qrh_seven_eighths"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ],
+  "enable_nanoda": true
+}

@@ -1,0 +1,201 @@
+# oai_qrh_bridge island: OpenAI's quasi-Riemann hypothesis (zeta != 0 on Re s > 7/8, openai/math
+# @ adc7f124, Apache-2.0) re-exported as `qrh_seven_eighths`, plus the single-pin port of the dbn
+# island closure that turns it into the unconditional de Bruijn-Newman bound
+# `dbn_real_zeros_of_qrh_unconditional` (every zero of H_t is real for t >= 9/32; classically
+# Lambda <= 9/32). Design: telperion/docs/QRH_DBN_BRIDGE_2026-10-07.md. Not RH.
+# conjecture1_proved = False.
+#
+# WHY THIS JOB LOOKS DIFFERENT. The island is a recipe, not a Lake package: openai/math must be
+# the workspace root (its lakefile patches 23 dependencies from hooks that assume that), so
+# materialize.sh checks OpenAI's lean/ out unmodified into work/oai and appends our lean_libs.
+# Everything below runs inside that workspace. The two `lake --dir ../work/oai env lean <file>`
+# lines run from telperion/examples/oai_qrh_bridge/lean on the committed artifact files
+# themselves; they are what the registry's coverage gate (missions/coverage.py) attributes to the
+# artifacts, and they are a real re-elaboration of each artifact against the built imports.
+#
+# COST. OpenAI's QRH closure is about 2,924 modules (486k lines) on top of Mathlib: several
+# CPU-hours cold, .lake about 19 GB. Hence: manual + weekly + island-path triggers only, a disk
+# clean-up step, and a build checkpoint saved even when the job fails so the next run resumes.
+# The Comparator (nanoda on) judges the unconditional theorem against a Mathlib-only challenge,
+# the bridge theorem in self-check mode, and REQUIRES the tampered negative control to be
+# rejected. There is no v4.34.1 Comparator tag; the v4.34.0 tag is built with its toolchain
+# file set to v4.34.1 (the same setup as the local runs recorded in the design doc).
+name: oai-qrh-bridge
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 0"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/oai-qrh-bridge.yml"
+      - "telperion/examples/oai_qrh_bridge/**"
+      - "telperion/examples/dbn/lean/DBN*.lean"
+concurrency:
+  group: oai-qrh-bridge-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-and-judge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space (the materialized workspace needs about 25 GB)
+        run: |
+          df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          sudo docker image prune --all --force > /dev/null 2>&1 || true
+          df -h / | tail -1
+
+      - name: Install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Materialize openai/math at the pinned commit
+        working-directory: telperion/examples/oai_qrh_bridge
+        run: ./materialize.sh
+
+      - name: Cache key
+        id: ckey
+        working-directory: telperion/examples/oai_qrh_bridge
+        run: |
+          echo "prefix=oai-qrh-$(sha256sum OAI_PIN lean/lakefile-stanza.lean | sha256sum | cut -c1-16)-" >> "$GITHUB_OUTPUT"
+          echo "run=${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore build checkpoint (incremental across runs)
+        uses: actions/cache/restore@v4
+        with:
+          path: telperion/examples/oai_qrh_bridge/work/oai/.lake
+          key: ${{ steps.ckey.outputs.prefix }}${{ steps.ckey.outputs.run }}
+          restore-keys: |
+            ${{ steps.ckey.outputs.prefix }}
+
+      - name: Resolve and patch OpenAI's dependencies, fetch Mathlib oleans
+        working-directory: telperion/examples/oai_qrh_bridge/work/oai
+        run: |
+          lake update
+          lake exe cache get
+
+      - name: Build the bridge, the single-pin dbn port, the unconditional theorem and the challenges
+        id: build
+        working-directory: telperion/examples/oai_qrh_bridge/work/oai
+        run: |
+          lake build ArdaQRHBridge AxiomGuardQRHBridge ArdaDBNUnconditional ArdaDBNChallenge ArdaDBNChallengeTampered
+          df -h / | tail -1
+
+      - name: Save build checkpoint (also after a failed build, so the next run resumes)
+        if: always() && steps.build.outcome != 'skipped'
+        uses: actions/cache/save@v4
+        with:
+          path: telperion/examples/oai_qrh_bridge/work/oai/.lake
+          key: ${{ steps.ckey.outputs.prefix }}${{ steps.ckey.outputs.run }}
+
+      # Re-elaborate the two committed artifact files against the built workspace. These two
+      # lines are the coverage gate's evidence for the artifacts (see the header).
+      - name: Re-elaborate the committed artifacts (coverage evidence)
+        working-directory: telperion/examples/oai_qrh_bridge/lean
+        # This directory has no lean-toolchain file (the workspace is work/oai), so pin elan's
+        # choice explicitly; the runner has no default toolchain (run 37721400676 failed here).
+        env:
+          ELAN_TOOLCHAIN: leanprover/lean4:v4.34.1
+        run: |
+          lake --dir ../work/oai env lean ArdaQRHBridge.lean
+          lake --dir ../work/oai env lean ArdaDBNUnconditional.lean
+
+      - name: Axiom guards (no sorryAx; the three standard axioms only)
+        working-directory: telperion/examples/oai_qrh_bridge/work/oai
+        run: |
+          lake env lean AxiomGuardQRHBridge.lean | tee axioms.out
+          ! grep -q sorryAx axioms.out
+          grep -q "'qrh_seven_eighths' depends on axioms: \[propext, Classical.choice, Quot.sound\]" axioms.out
+          lake env lean AxiomGuardDBNUnconditional.lean | tee axioms2.out
+          ! grep -q sorryAx axioms2.out
+          grep -q "'dbn_real_zeros_of_qrh_unconditional' depends on axioms: \[propext, Classical.choice, Quot.sound\]" axioms2.out
+
+      - name: Install landrun shim (preserves `--`; same shim as missions-comparator.yml)
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          cat > "$HOME/.local/bin/landrun" <<'SHIM'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          args=("$@"); i=0; n=${#args[@]}
+          while (( i < n )); do
+            a="${args[$i]}"
+            case "$a" in
+              --ro|--rw|--rwx|--rox|--env|--log-level)
+                v="${args[$((i+1))]:-}"
+                [[ "$a" == "--env" && "$v" == *"="* ]] && export "$v"
+                i=$((i+2)) ;;
+              --env=*) export "${a#--env=}"; i=$((i+1)) ;;
+              --*=*) i=$((i+1)) ;;
+              -*) i=$((i+1)) ;;
+              *) break ;;
+            esac
+          done
+          exec "${args[@]:$i}"
+          SHIM
+          chmod +x "$HOME/.local/bin/landrun"
+
+      - name: Build Comparator + lean4export (v4.34.0 tag, toolchain v4.34.1)
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v4.34.0 https://github.com/leanprover/comparator.git "$HOME/comparator"
+          cd "$HOME/comparator"
+          echo "leanprover/lean4:v4.34.1" > lean-toolchain
+          lake build lean4export comparator
+          COMPARATOR_BIN="$(find "$HOME/comparator/.lake" -type f -name comparator -path '*/bin/*' | head -1)"
+          L4X_BIN="$(find "$HOME/comparator/.lake" -type f -name lean4export -path '*/bin/*' | head -1)"
+          test -x "$COMPARATOR_BIN" && test -x "$L4X_BIN"
+          echo "$(dirname "$COMPARATOR_BIN")" >> "$GITHUB_PATH"
+          echo "COMPARATOR_LEAN4EXPORT=$L4X_BIN" >> "$GITHUB_ENV"
+
+      - name: Build nanoda (2nd kernel)
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/ammkrn/nanoda_lib.git "$HOME/nanoda"
+          cd "$HOME/nanoda"
+          cargo build --release
+          test -x "$HOME/nanoda/target/release/nanoda_bin"
+          echo "COMPARATOR_NANODA=$HOME/nanoda/target/release/nanoda_bin" >> "$GITHUB_ENV"
+
+      - name: "Comparator (nanoda on): positive challenges accepted, negative control REJECTED"
+        working-directory: telperion/examples/oai_qrh_bridge/work/oai
+        env:
+          COMPARATOR_LANDRUN: /home/runner/.local/bin/landrun
+          MALLOC_ARENA_MAX: "2"
+        run: |
+          set -uo pipefail
+          ulimit -s unlimited 2>/dev/null || ulimit -s 4194304 2>/dev/null || true
+          fail=0
+          for cfg in dbn_real_zeros_of_qrh_unconditional qrh_seven_eighths; do
+            echo "==================== $cfg (must be ACCEPTED) ===================="
+            if lake env comparator "$cfg.comparator.json" 2>&1 | tee "cmp_$cfg.out" && grep -q "Your solution is okay!" "cmp_$cfg.out"; then
+              echo "ACCEPTED: $cfg"
+            else
+              echo "::error::Comparator did not accept $cfg"; fail=1
+            fi
+          done
+          echo "==================== tampered (must be REJECTED) ===================="
+          if lake env comparator tampered.comparator.json > cmp_tampered.out 2>&1 && grep -q "Your solution is okay!" cmp_tampered.out; then
+            echo "::error::Comparator ACCEPTED the tampered negative control; the judge is not discriminating"; fail=1
+          elif grep -q "does not match" cmp_tampered.out; then
+            echo "REJECTED as required: $(grep -m1 'does not match' cmp_tampered.out)"
+          else
+            echo "::error::tampered control neither accepted nor rejected for the expected reason"; cat cmp_tampered.out; fail=1
+          fi
+          exit $fail
+
+      - name: Upload Comparator and axiom logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: oai-qrh-bridge-logs
+          path: |
+            telperion/examples/oai_qrh_bridge/work/oai/cmp_*.out
+            telperion/examples/oai_qrh_bridge/work/oai/axioms*.out
+          if-no-files-found: ignore

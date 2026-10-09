@@ -1,0 +1,81 @@
+# Cold reproduction of the whole chain on a GitHub-hosted runner: materialize openai/math at the pin, build the
+# bridge, the single-pin dbn port, the unconditional theorem and the challenges; print the axiom guards; run
+# Comparator (nanoda on) on the positive challenges and REQUIRE the tampered control to be rejected; then judge the
+# two registry-form challenges. Several CPU-hours cold; the build is checkpointed between runs.
+name: verify
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["lean/**", "scripts/**", ".github/workflows/verify.yml"]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    defaults: { run: { shell: bash } }
+    env:
+      ELAN_TOOLCHAIN: leanprover/lean4:v4.34.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL || true
+          df -h / | tail -1
+      - name: Install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+      - name: Materialize openai/math at the pinned commit
+        run: scripts/materialize.sh
+      - name: Cache key
+        id: ckey
+        run: echo "prefix=qrh-dbn-$(sha256sum lean/OAI_PIN lean/bridge/lakefile-stanza.lean lean/judge/lakefile-stanza.lean | sha256sum | cut -c1-16)-" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache/restore@v4
+        with:
+          path: work/oai/.lake
+          key: ${{ steps.ckey.outputs.prefix }}${{ github.run_id }}
+          restore-keys: ${{ steps.ckey.outputs.prefix }}
+      - name: Resolve OpenAI's dependencies and fetch Mathlib oleans
+        working-directory: work/oai
+        run: lake update && lake exe cache get
+      - name: Build
+        id: build
+        working-directory: work/oai
+        run: lake build ArdaQRHBridge AxiomGuardQRHBridge ArdaDBNUnconditional ArdaDBNChallenge ArdaDBNNegativeControl MissionChallenges.RH_dbn_real_zeros_nine_thirtyseconds MissionChallenges.RH_zeta_zero_free_seven_eighths
+      - name: Save build checkpoint
+        if: always() && steps.build.outcome != 'skipped'
+        uses: actions/cache/save@v4
+        with:
+          path: work/oai/.lake
+          key: ${{ steps.ckey.outputs.prefix }}${{ github.run_id }}
+      - name: Axiom guards
+        working-directory: work/oai
+        run: |
+          lake env lean AxiomGuardQRHBridge.lean | tee axioms.out
+          lake env lean AxiomGuardDBNUnconditional.lean | tee -a axioms.out
+          ! grep -q sorryAx axioms.out
+          grep -q "'dbn_real_zeros_of_qrh_unconditional' depends on axioms: \[propext, Classical.choice, Quot.sound\]" axioms.out
+      - name: Comparator + lean4export (v4.34.0 tag on toolchain v4.34.1) and nanoda
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch v4.34.0 https://github.com/leanprover/comparator.git "$HOME/comparator"
+          echo "leanprover/lean4:v4.34.1" > "$HOME/comparator/lean-toolchain"
+          (cd "$HOME/comparator" && lake build lean4export comparator)
+          echo "$(dirname "$(find "$HOME/comparator/.lake" -type f -name comparator -path '*/bin/*' | head -1)")" >> "$GITHUB_PATH"
+          echo "COMPARATOR_LEAN4EXPORT=$(find "$HOME/comparator/.lake" -type f -name lean4export -path '*/bin/*' | head -1)" >> "$GITHUB_ENV"
+          git clone --depth 1 https://github.com/ammkrn/nanoda_lib.git "$HOME/nanoda" && (cd "$HOME/nanoda" && cargo build --release)
+          echo "COMPARATOR_NANODA=$HOME/nanoda/target/release/nanoda_bin" >> "$GITHUB_ENV"
+          mkdir -p "$HOME/.local/bin"; printf '%s\n' '#!/usr/bin/env bash' 'set -euo pipefail' 'args=("$@"); i=0; n=${#args[@]}' 'while (( i < n )); do a="${args[$i]}"; case "$a" in --ro|--rw|--rwx|--rox|--env|--log-level) v="${args[$((i+1))]:-}"; [[ "$a" == "--env" && "$v" == *"="* ]] && export "$v"; i=$((i+2));; --env=*) export "${a#--env=}"; i=$((i+1));; --*=*) i=$((i+1));; -*) i=$((i+1));; *) break;; esac; done' 'exec "${args[@]:$i}"' > "$HOME/.local/bin/landrun"; chmod +x "$HOME/.local/bin/landrun"
+      - name: Comparator verdicts
+        working-directory: work/oai
+        env: { COMPARATOR_LANDRUN: /home/runner/.local/bin/landrun, MALLOC_ARENA_MAX: "2" }
+        run: |
+          set -uo pipefail; ulimit -s unlimited 2>/dev/null || true; fail=0
+          for cfg in dbn_real_zeros_of_qrh_unconditional qrh_seven_eighths RH_dbn_real_zeros_nine_thirtyseconds RH_zeta_zero_free_seven_eighths; do
+            if lake env comparator "$cfg.comparator.json" 2>&1 | tee "cmp_$cfg.out" && grep -q "Your solution is okay!" "cmp_$cfg.out"; then echo "ACCEPTED: $cfg"; else echo "::error::not accepted: $cfg"; fail=1; fi
+          done
+          if lake env comparator tampered.comparator.json > cmp_tampered.out 2>&1 && grep -q "Your solution is okay!" cmp_tampered.out; then echo "::error::tampered control ACCEPTED"; fail=1; elif grep -q "does not match" cmp_tampered.out; then echo "REJECTED as required: $(grep -m1 'does not match' cmp_tampered.out)"; else echo "::error::tampered control: unexpected outcome"; cat cmp_tampered.out; fail=1; fi
+          exit $fail
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: verify-logs, path: "work/oai/cmp_*.out\nwork/oai/axioms.out", if-no-files-found: ignore }

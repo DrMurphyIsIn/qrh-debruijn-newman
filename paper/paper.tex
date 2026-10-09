@@ -1,0 +1,538 @@
+\documentclass[11pt]{article}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{microtype}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont=bf]{caption}
+\usepackage{xcolor}
+\usepackage{listings}
+\setlength{\emergencystretch}{2.5em}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=black, citecolor=black, urlcolor=blue}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\lean}[1]{\texttt{#1}}
+\newcommand{\Lam}{\Lambda}
+\newcommand{\Hfun}{H}
+\newcommand{\re}{\operatorname{Re}}
+\newcommand{\im}{\operatorname{Im}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Z}{\mathbb{Z}}
+
+\definecolor{leanbg}{HTML}{F4F2EC}
+\lstdefinelanguage{Lean}{
+  morekeywords={theorem,lemma,def,noncomputable,import,namespace,end,open,by,fun,sorry,example},
+  sensitive=true, morecomment=[l]{--}, morecomment=[s]{/-}{-/}, morestring=[b]",
+}
+\lstset{language=Lean, basicstyle=\small\ttfamily, backgroundcolor=\color{leanbg},
+  frame=single, framerule=0pt, framesep=5pt, xleftmargin=5pt, xrightmargin=5pt,
+  breaklines=true, columns=fullflexible, keepspaces=true, showstringspaces=false,
+  literate={ℝ}{{$\mathbb{R}$}}1 {ℂ}{{$\mathbb{C}$}}1 {ℕ}{{$\mathbb{N}$}}1 {ℤ}{{$\mathbb{Z}$}}1
+           {∀}{{$\forall$}}1 {→}{{$\to$}}1 {≠}{{$\neq$}}1 {≤}{{$\le$}}1 {≥}{{$\ge$}}1
+           {θ}{{$\theta$}}1 {Φ}{{$\Phi$}}1 {π}{{$\pi$}}1 {∑}{{$\sum$}}1 {∫}{{$\int$}}1
+           {↦}{{$\mapsto$}}1 {←}{{$\leftarrow$}}1 {∈}{{$\in$}}1 {ξ}{{$\xi$}}1 {·}{{$\cdot$}}1
+           {⟨}{{$\langle$}}1 {⟩}{{$\rangle$}}1 {₀}{{$_0$}}1 {²}{{$^2$}}1 {ε}{{$\varepsilon$}}1}
+
+\title{A kernel-checked bound $\Lam \le 9/32$ for the de Bruijn--Newman constant\\
+from OpenAI's quasi-Riemann hypothesis}
+\author{Peter W. Murphy}
+\date{October 9, 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+In October 2026 OpenAI released a Lean~4 proof that the Riemann zeta function has no zero with real part greater than $7/8$. We compose that theorem with de Bruijn's 1950 heat-flow theorem, as formalized on the Arda project's \lean{dbn} island, inside a single Lean environment pinned to OpenAI's toolchain and Mathlib revision. The result is the theorem
+\[
+\forall\, t \ge \tfrac{9}{32}\ \ \forall\, z \in \C,\qquad \Hfun_t(z) = 0 \implies \im z = 0,
+\]
+which is the classical statement $\Lam \le 9/32$ for the de Bruijn--Newman constant, and whose proof term depends only on \lean{propext}, \lean{Classical.choice} and \lean{Quot.sound}. It is the first bound on $\Lam$ below de Bruijn's $1/2$ that is checked by a proof kernel end to end. It was re-checked by a second kernel (nanoda) through openai/ten-proofs Comparator against a challenge that imports only Mathlib, with a tampered challenge rejected; independently audited by a second session from a fresh checkout; and judged in continuous integration against a registered statement before it was granted. We also document the obstacle that had to be removed first: the two theorems were born under Mathlib revisions six weeks apart, and although the statement \lean{riemannZeta s $\neq$ 0} is syntactically identical at both revisions, 267 definitions in its meaning closure differ. Composing across that seam would have been a mathematical identification rather than a kernel check; porting the de Bruijn machinery to OpenAI's revision (seventeen of nineteen modules byte-identical, two one-line proof repairs) removed the seam. The bound is weaker than the numerical bounds $\Lam \le 0.22$ (Polymath15) and $\Lam \le 0.2$ (Platt--Trudgian), and it is not the Riemann Hypothesis, which is $\Lam = 0$. The mathematics is a one-line composition of two known theorems; the contribution is the verification, and this paper is its record.
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{The constant}
+
+Write $\xi$ for Riemann's entire function, $\xi(s) = \tfrac12 s(s-1)\pi^{-s/2}\Gamma(s/2)\zeta(s)$, whose zeros are exactly the nontrivial zeros of $\zeta$. Following the normalization of Rodgers and Tao \cite{RT} and of the Polymath15 project \cite{P15}, put
+\begin{equation}\label{eq:H}
+\Hfun_t(z) \;=\; \int_0^\infty e^{t u^2}\,\Phi(u)\cos(zu)\,du,
+\qquad
+\Phi(u) \;=\; \sum_{n \ge 1}\bigl(2\pi^2 n^4 e^{9u} - 3\pi n^2 e^{5u}\bigr)\exp\!\bigl(-\pi n^2 e^{4u}\bigr).
+\end{equation}
+Then $\Hfun_0(z) = \tfrac18\,\xi\!\left(\tfrac12 + \tfrac{iz}{2}\right)$, so the Riemann Hypothesis is the statement that every zero of $\Hfun_0$ is real. The family $\Hfun_t$ is the evolution of $\Hfun_0$ under the backward heat equation $\partial_t \Hfun = -\partial_{zz}\Hfun$. De Bruijn \cite{dB} proved that if every zero of $\Hfun_{t_0}$ is real then so is every zero of $\Hfun_t$ for $t \ge t_0$, and that this is the case for $t_0 = 1/2$. Newman \cite{Ne} proved that for some $t$ the zeros of $\Hfun_t$ are not all real, so that the threshold
+\[
+\Lam \;=\; \inf\{\,t \in \R : \text{every zero of } \Hfun_t \text{ is real}\,\}
+\]
+is a well-defined real number, the de Bruijn--Newman constant, and he conjectured $\Lam \ge 0$. Rodgers and Tao \cite{RT} proved Newman's conjecture in 2018. Together with de Bruijn's upper bound this places $\Lam$ in $[0, 1/2]$, and the Riemann Hypothesis is exactly the statement $\Lam = 0$.
+
+The lower bounds have come from Lehmer pairs, consecutive zeros of $\zeta$ that lie anomalously close together, and they have converged on zero from below: $\Lam > -50$ (Csordas, Norfolk and Varga \cite{CNV}), $\Lam > -0.385$ (Csordas, Smith and Varga \cite{CSV}), $\Lam > -2.7 \times 10^{-9}$ (Odlyzko \cite{Od}), $\Lam > -1.15 \times 10^{-11}$ (Saouter, Gourdon and Demichel \cite{SGD}), and then Rodgers and Tao's $\Lam \ge 0$. The upper bounds have moved more slowly. De Bruijn's $1/2$ stood for almost sixty years before Ki, Kim and Lee \cite{KKL} made it strict. The Polymath15 project \cite{P15} proved $\Lam \le 0.22$ in 2019, and Platt and Trudgian \cite{PT} proved $\Lam \le 0.2$ in 2021. Both of the last two are computer-assisted: they combine rigorous numerical evaluation of $\Hfun_t$ at large height with analytic estimates, and the computations live outside any proof assistant.
+
+\subsection{The theorem}
+
+This paper records a bound that is far weaker than $0.2$, and is the first one below $1/2$ to be a kernel-checked theorem in its entirety. In the sInf-free form that the formalization uses, because the island does not define $\Lam$ (\cref{rem:sinf}):
+
+\begin{theorem}\label{thm:main}
+For every real $t \ge 9/32$ and every $z \in \C$, if $\Hfun_t(z) = 0$ then $\im z = 0$. Classically, $\Lam \le 9/32 = 0.28125$.
+\end{theorem}
+
+The proof is one line, and it is a composition of two theorems that are not ours. The first is OpenAI's.
+
+\begin{theorem}[OpenAI, 2026 \cite{OAIqrh,OAImath}]\label{thm:qrh}
+For every $s \in \C$ with $\re s > 7/8$, $\zeta(s) \ne 0$.
+\end{theorem}
+
+Theorem~\ref{thm:qrh} is the headline of family~003, ``The quasi-Riemann hypothesis'', in OpenAI's October 2026 mathematics release \cite{OAImath}. It is formalized in Lean~4 against Mathlib's \lean{riemannZeta} as \lean{OAI.riemannZeta\_ne\_zero\_of\_seven\_eighths\_lt\_re}, and the release ships a Comparator challenge for it whose statement imports only Mathlib. We replayed that challenge through Comparator with a second kernel before using the theorem (\cref{sec:verification}). Nothing in the present work proves anything about $\zeta$; we take \cref{thm:qrh} as it comes and we re-export it with its implicit binder closed.
+
+A remark on what \cref{thm:qrh} is. Before it, every known zero-free region for $\zeta$ was of the de la Vall\'ee Poussin shape $\re s > 1 - c/\log(|{\im s}| + 2)$ or an improvement of it: a region that hugs the line $\re s = 1$ and thins out at height. No fixed vertical strip inside the critical strip had ever been shown free of zeros. A zero-free half-plane $\re s > 7/8$ is a statement of a different kind, and by the functional equation it confines every nontrivial zero to $1/8 \le \re s \le 7/8$. The Riemann Hypothesis is the limiting case $\re s = 1/2$.
+
+The second theorem is de Bruijn's, in the parametric form the Arda project formalized in September 2026 on its \lean{dbn} island \cite{Arda}.
+
+\begin{theorem}[de Bruijn 1950, Theorem 13; Polymath15, Theorem 3.2]\label{thm:dB}
+Let $t_0, Y \in \R$. If every zero $z$ of $\Hfun_{t_0}$ satisfies $(\im z)^2 \le Y$, then for every $t \ge t_0$ every zero $z$ of $\Hfun_t$ satisfies $(\im z)^2 \le \max(Y - 2(t - t_0), 0)$.
+\end{theorem}
+
+In particular, if the zeros of $\Hfun_0$ lie in the strip $|\im z| \le y$, then the zeros of $\Hfun_t$ are real for $t \ge y^2/2$. A zero-free half-plane $\re s > \theta$ for $\zeta$ puts the zeros of $\Hfun_0$ in the strip $|\im z| \le 2\theta - 1$, through $\Hfun_0(z) = \xi(\tfrac12 + \tfrac{iz}{2})/8$ and the evenness of $\Hfun_0$, so:
+
+\begin{corollary}\label{cor:conv}
+If $\zeta(s) \ne 0$ whenever $\re s > \theta$, then every zero of $\Hfun_t$ is real for every $t \ge 2(\theta - \tfrac12)^2$. Classically, $\Lam \le 2(\theta - \tfrac12)^2$.
+\end{corollary}
+
+At $\theta = 1$, the trivial half-plane, this is de Bruijn's $\Lam \le 1/2$. At $\theta = 7/8$ it is $\Lam \le 2 \cdot (3/8)^2 = 9/32$. \Cref{thm:main} is \cref{cor:conv} applied to \cref{thm:qrh}.
+
+\subsection{What the contribution is, and what it is not}
+
+The composition is trivial as mathematics. What was not trivial was making the two theorems meet in one Lean environment, and then checking the result harder than it needed to be checked, so that the record of \cref{thm:main} is a record that can be trusted without trusting us.
+
+The two theorems were born under different Mathlib revisions, six weeks apart. The Arda \lean{dbn} island is pinned to Lean v4.34.0-rc1 and Mathlib \lean{de5ce8a9}; OpenAI's library is pinned to Lean v4.34.1 and Mathlib \lean{d13f23b}. Both state \cref{thm:qrh} with exactly the same characters, \lean{$\forall$ s : $\C$, (7 / 8 : $\R$) < s.re $\to$ riemannZeta s $\neq$ 0}, and a reader could be forgiven for thinking that the two statements mean the same thing by inspection. We exported both environments with lean4export and compared the meaning closure of the statement, every definition it unfolds to, after normalizing for renamed universes and hygienic names. The statements themselves are identical. But 267 named definitions beneath them differ, from Mathlib's reorganization of the algebraic hierarchy down to the core definition of \lean{Bool.and}. No kernel run can check ``OpenAI's $\zeta$ is our $\zeta$'' across those revisions; the identification would be mathematics, not verification. \Cref{sec:seam} documents this.
+
+So we removed the seam. The import closure of \cref{cor:conv} on the \lean{dbn} island is nineteen modules and $5{,}512$ lines, plus two modules of the LiCriterion library that supply $\xi$ as an entire function. We copied all of it into OpenAI's workspace, at OpenAI's revision, and compiled it there. Seventeen of the nineteen modules compiled byte-identically. Two needed a one-line repair each, both to proof terms, both forced by a Mathlib rename or hypothesis change in the intervening six weeks, neither touching a statement or a definition. After that, \cref{thm:main} is one kernel term in one environment:
+\begin{lstlisting}
+theorem dbn_real_zeros_of_qrh_unconditional :
+    ∀ t : ℝ, 9 / 32 ≤ t → ∀ z : ℂ, DBN.H t z = 0 → z.im = 0 :=
+  dbn_real_zeros_of_qrh qrh_seven_eighths
+\end{lstlisting}
+and \lean{\#print axioms} reports \lean{[propext, Classical.choice, Quot.sound]}.
+
+Then the verification. The theorem was re-checked by a second, independently written kernel through openai/ten-proofs Comparator \cite{Comparator}, against a challenge file that imports only Mathlib and restates the definition of $\Hfun_t$ verbatim, so that the solution cannot substitute a different $\Hfun$; a tampered challenge, with one exponent in $\Phi$ changed, is rejected. A second session, from a fresh checkout of the pushed branch, verified OpenAI's statement and pins against GitHub, recomputed the import closure, diffed every ported file against its source, rebuilt everything and re-ran all three Comparator configurations with its own Comparator and nanoda builds. A continuous-integration job repeats the whole chain, cold, on every push. And the result entered a registry with a governance rule that neither the authoring session nor the auditing session could satisfy alone: the operator wrote the read-backs of the four formal statements under his own identity, the verify gate granted them, and a separate CI judge re-proved each registered statement from its artifact with both kernels before the pass was recorded with the artifact hashed at the judged commit. \Cref{sec:verification} lays this out, with a table of what is kernel-checked and what is trusted as code.
+
+What \cref{thm:main} does not do is move either frontier. It does not improve on $0.22$, let alone $0.2$. It does not bring the Riemann Hypothesis closer, because the conversion in \cref{cor:conv} is lossy by its nature: a half-plane at $\tfrac12 + \varepsilon$ yields only $\Lam \le 2\varepsilon^2$, and only $\varepsilon = 0$, which is RH itself, yields $\Lam = 0$. \Cref{sec:frontier} says this precisely, and records the one number from the exercise that is worth keeping: a zero-free half-plane $\re s > \theta$ beats the Polymath15 bound through \cref{cor:conv} exactly when $\theta < \tfrac12 + \sqrt{0.11} \approx 0.8317$. OpenAI's $7/8 = 0.875$ is just short.
+
+\paragraph{Organization.} \Cref{sec:statements} gives the formal statements exactly as checked. \Cref{sec:composition} gives the proof of \cref{cor:conv} as the island carries it out. \Cref{sec:seam} is the cross-revision analysis and the port. \Cref{sec:verification} is the verification chain. \Cref{sec:frontier} is the honest assessment. \Cref{app:repro} is the reproduction recipe and \cref{app:logs} the verdicts, verbatim.
+
+\section{The formal statements}\label{sec:statements}
+
+Everything in this section is a Lean~4 declaration in the repository that accompanies this paper \cite{Repo}, compiled in the materialized workspace described in \cref{app:repro}. We give the statements as checked and describe the objects in words. \lean{DBN.H} is $\Hfun_t(z)$; \lean{riemannZeta} is Mathlib's $\zeta$.
+
+\subsection{The heat-flow family}
+
+The \lean{dbn} island defines the objects of \cref{eq:H} directly (\lean{DBNDefs.lean}):
+\begin{lstlisting}
+noncomputable def Φ (u : ℝ) : ℝ :=
+  ∑' n : ℕ+, (2 * Real.pi ^ 2 * (n : ℝ) ^ 4 * Real.exp (9 * u)
+      - 3 * Real.pi * (n : ℝ) ^ 2 * Real.exp (5 * u))
+    * Real.exp (-Real.pi * (n : ℝ) ^ 2 * Real.exp (4 * u))
+
+noncomputable def HIntegrand (t : ℝ) (z : ℂ) (u : ℝ) : ℂ :=
+  ((Real.exp (t * u ^ 2) : ℝ) : ℂ) * ((Φ u : ℝ) : ℂ) * Complex.cos (z * u)
+
+noncomputable def H (t : ℝ) (z : ℂ) : ℂ := ∫ u in Set.Ioi (0 : ℝ), HIntegrand t z u
+\end{lstlisting}
+Here \lean{$\sum$'} is Mathlib's unconditional sum and the integral is the Bochner integral over $(0,\infty)$. These are the Polymath15 objects. The connection to $\xi$ is a theorem of the island, \lean{dbn\_H0\_eq\_xi}:
+\[
+\Hfun_0(z) \;=\; \tfrac18 \cdot \xi\!\left(\tfrac12 + \tfrac{i z}{2}\right),
+\]
+where $\xi$ is LiCriterion's \lean{riemannXi}, $\xi(s) = \tfrac12 s(s-1)\Lam_0(s) + \tfrac12$ in terms of Mathlib's \lean{completedRiemannZeta$_0$}, the completed zeta function with its two poles removed. The $+\tfrac12$ compensates for the pole removal: $\Lam(s) = \Lam_0(s) - 1/s - 1/(1-s)$, and $\tfrac12 s(s-1)\bigl(1/s + 1/(1-s)\bigr) = -\tfrac12$. The theorem \lean{riemannXi\_eq\_zero\_iff\_strip\_zero} says that $\xi(s) = 0$ exactly when $\zeta(s) = 0$ and $0 < \re s < 1$.
+
+\begin{remark}\label{rem:sinf}
+The island deliberately does not define $\Lam$. A definition as an infimum over the reals would require the set $\{t : \text{all zeros of } \Hfun_t \text{ real}\}$ to be nonempty and bounded below before \lean{sInf} means anything, and both facts are theorems in their own right (de Bruijn's upper bound and Rodgers--Tao's lower bound). Statements about $\Lam$ are therefore carried in the equivalent ``sInf-free'' form: ``every zero of $\Hfun_t$ is real for every $t \ge c$'' stands for $\Lam \le c$. Nothing in this paper depends on $\Lam \ge 0$, and the registry does not record it.
+\end{remark}
+
+\subsection{De Bruijn's theorem}
+
+\lean{DBNM1Parametric.lean} on the island proves \cref{thm:dB} as
+\begin{lstlisting}
+theorem dbn_debruijn_parametric :
+    ∀ t0 Y : ℝ, (∀ z : ℂ, DBN.H t0 z = 0 → z.im ^ 2 ≤ Y) →
+    ∀ t : ℝ, t0 ≤ t → ∀ z : ℂ, DBN.H t z = 0 → z.im ^ 2 ≤ max (Y - 2 * (t - t0)) 0
+\end{lstlisting}
+with no side condition on $t_0$ or $Y$. The proof goes through a Hadamard product representation of $\Hfun_{t_0}$ (order $< 2$), the heat-flow contraction of each factor, and Hurwitz's theorem for the limit, and it is the subject of the September 2026 Arda work recorded in the registry as \lean{RH\_dbn\_debruijn\_parametric}; this paper takes it as given. The specialization that \cref{cor:conv} uses is
+\begin{lstlisting}
+theorem m1_H_real_zeros_of_im_sq_le {t0 Y t : ℝ}
+    (h0 : ∀ z : ℂ, H t0 z = 0 → z.im ^ 2 ≤ Y)
+    (ht : t0 ≤ t) (hY : Y ≤ 2 * (t - t0)) {z : ℂ} (hz : H t z = 0) : z.im = 0
+\end{lstlisting}
+
+\subsection{The corollary, conditional}
+
+\lean{DBNZeroFreeHalfplane.lean}, added to the island on October 7, proves \cref{cor:conv} for every real $\theta$:
+\begin{lstlisting}
+theorem dbn_real_zeros_of_zeta_halfplane (θ : ℝ)
+    (hfree : ∀ s : ℂ, θ < s.re → riemannZeta s ≠ 0) :
+    ∀ t : ℝ, 2 * (θ - 1 / 2) ^ 2 ≤ t → ∀ z : ℂ, DBN.H t z = 0 → z.im = 0
+\end{lstlisting}
+and the instance $\theta = 7/8$, with the hypothesis written exactly as OpenAI's theorem with its implicit binder closed:
+\begin{lstlisting}
+theorem dbn_real_zeros_of_qrh
+    (hqrh : ∀ s : ℂ, (7 / 8 : ℝ) < s.re → riemannZeta s ≠ 0) :
+    ∀ t : ℝ, 9 / 32 ≤ t → ∀ z : ℂ, DBN.H t z = 0 → z.im = 0
+\end{lstlisting}
+Both carry no assumption on $\theta$: for $\theta < 1/2$ the two one-sided bounds in the proof contradict each other, so $\Hfun_0$ has no zeros at all under the hypothesis and the conclusion is vacuously true. (By Hardy's theorem the hypothesis is false for $\theta < 1/2$; the formalization does not use this.)
+
+\subsection{The half-plane, re-exported}
+
+OpenAI's theorem, in \lean{lean/OAI/NumberTheory/DirichletL/Nonvanishing.lean} of \cite{OAImath}, reads
+\begin{lstlisting}
+theorem riemannZeta_ne_zero_of_seven_eighths_lt_re
+    {s : ℂ} (hs : (7 / 8 : ℝ) < s.re) : riemannZeta s ≠ 0 :=
+  SevenEighths.ProbeFinalAssemblyUnconditional.zeta_nonzero s hs
+\end{lstlisting}
+Our bridge module \lean{ArdaQRHBridge.lean} is compiled inside an unmodified checkout of OpenAI's \lean{lean/} directory at commit \lean{adc7f124}, and adds one declaration:
+\begin{lstlisting}
+import OAI.NumberTheory.DirichletL.Nonvanishing
+
+theorem qrh_seven_eighths : ∀ s : ℂ, (7 / 8 : ℝ) < s.re → riemannZeta s ≠ 0 :=
+  fun _ hs ↦ OAI.riemannZeta_ne_zero_of_seven_eighths_lt_re hs
+\end{lstlisting}
+The proof is entirely OpenAI's. The file header, the repository's \lean{NOTICE}, and this paragraph say so.
+
+\subsection{The theorem, unconditional}
+
+With the nineteen island modules ported into the same workspace (\cref{sec:seam}), \lean{ArdaDBNUnconditional.lean} imports both sides and states \cref{thm:main}:
+\begin{lstlisting}
+import DBNZeroFreeHalfplane
+import ArdaQRHBridge
+
+theorem dbn_real_zeros_of_qrh_unconditional :
+    ∀ t : ℝ, 9 / 32 ≤ t → ∀ z : ℂ, DBN.H t z = 0 → z.im = 0 :=
+  dbn_real_zeros_of_qrh qrh_seven_eighths
+\end{lstlisting}
+Both occurrences of \lean{riemannZeta}, the one inside \lean{dbn\_real\_zeros\_of\_qrh}'s hypothesis and the one in \lean{qrh\_seven\_eighths}'s conclusion, are now the same constant of the same environment, which is what makes the application typecheck without any identification step. The axiom guard \lean{AxiomGuardDBNUnconditional.lean} prints the axioms of this theorem and of seven of its ancestors; all eight are \lean{[propext, Classical.choice, Quot.sound]}.
+
+\section{The composition}\label{sec:composition}
+
+The proof of \cref{cor:conv} on the island is short enough to give in full, and it is worth giving because every step is a named island theorem that the registry judge has separately certified.
+
+Fix $\theta$ and the half-plane hypothesis. Let $w$ be a zero of $\Hfun_0$. By \lean{dbn\_H0\_eq\_xi} and the factor $1/8$, $\xi(\tfrac12 + \tfrac{iw}{2}) = 0$ (\lean{H\_zero\_eq\_zero\_iff\_of\_H0\_eq\_xi}). By \lean{riemannXi\_eq\_zero\_iff\_strip\_zero}, $s := \tfrac12 + \tfrac{iw}{2}$ is a zero of $\zeta$. By the half-plane hypothesis, $\re s \le \theta$. By the elementary identity \lean{xiArg\_re}, $\re s = \tfrac12 - \tfrac{\im w}{2}$. Hence
+\[
+-\im w \;\le\; 2\theta - 1 .
+\]
+This is \lean{DBN.H0\_neg\_im\_le\_of\_zeta\_halfplane}. Now $\Hfun_0$ is even, \lean{H\_neg}: $\Hfun_t(-z) = \Hfun_t(z)$, because the integrand depends on $z$ only through $\cos(zu)$. So $-w$ is also a zero and the same bound gives $\im w \le 2\theta - 1$. Together,
+\[
+(\im w)^2 \;\le\; (2\theta - 1)^2 ,
+\]
+which is \lean{DBN.H0\_im\_sq\_le\_of\_zeta\_halfplane}; the step from the two one-sided bounds to the square is \lean{nlinarith}. Finally apply \lean{m1\_H\_real\_zeros\_of\_im\_sq\_le} with $t_0 = 0$ and $Y = (2\theta-1)^2$: a zero of $\Hfun_t$ is real as soon as $Y \le 2t$, that is $t \ge (2\theta - 1)^2/2 = 2(\theta - \tfrac12)^2$. The hypothesis $0 \le t$ that the heat-flow lemma needs follows from the same inequality since a square is nonnegative. The instance $\theta = 7/8$ is \lean{norm\_num} and \lean{linarith}: $(2 \cdot 7/8 - 1)^2/2 = (3/4)^2/2 = 9/32$.
+
+Nothing here is deep. The depth is in \lean{dbn\_debruijn\_parametric} and in OpenAI's theorem, and both are inherited.
+
+\section{The seam, and its removal}\label{sec:seam}
+
+\subsection{Two revisions}
+
+The \lean{dbn} island is a Lake package pinned to Lean v4.34.0-rc1 and Mathlib revision \lean{de5ce8a9}. OpenAI's library is pinned to Lean v4.34.1 and Mathlib revision \lean{d13f23b}, about six weeks later. Both revisions declare the constant \lean{riemannZeta}, and the statement
+\[
+\lean{$\forall$ s : $\C$, (7 / 8 : $\R$) < s.re $\to$ riemannZeta s $\neq$ 0}
+\]
+elaborates at both to an expression with the same constants, the same instance terms and the same numerals. Our first construction, on October 7, was the obvious one: prove \lean{dbn\_real\_zeros\_of\_qrh} on the island, prove \lean{qrh\_seven\_eighths} in OpenAI's workspace, and observe that the hypothesis of the former is the conclusion of the latter. That observation is true as text. The question is whether it is true as mathematics, and whether a kernel can be made to check it.
+
+\subsection{The fidelity analysis}
+
+We answered the first question with lean4export \cite{l4x}. In each environment we copied the elaborated statement into a definition \lean{QRHFidelity.stmt} (on the island side, the hypothesis of \lean{dbn\_real\_zeros\_of\_qrh}; on OpenAI's side, the type of \lean{qrh\_seven\_eighths}) and exported it with its full dependency closure. The island side used lean4export built at tag v4.34.0-rc1; OpenAI's side used Comparator's copy at v4.34.1. A script (\lean{lean/fidelity/compare\_exports.py} in \cite{Repo}) then hashed every constant structurally and walked the \emph{meaning closure} of the statement: the types of everything, the values of definitions, opaques and recursor rules, but not the proofs of theorems, which are irrelevant by proof irrelevance. It normalized three sources of noise: universe-parameter renaming; hygienic, private and auxiliary names, which embed module paths and so change when a file moves; and references to theorems, which are compared by statement.
+
+\begin{table}[h]\centering\small
+\begin{tabular}{lrr}
+\toprule
+ & island side & OpenAI side \\
+\midrule
+Lean & v4.34.0-rc1 & v4.34.1 \\
+Mathlib & \lean{de5ce8a9} & \lean{d13f23b} \\
+constants exported & 53,251 & 53,309 \\
+constants in the meaning closure of the statement & 4,978 & 4,982 \\
+\midrule
+normalized digest of the statement & \multicolumn{2}{c}{identical} \\
+named definitions in the closure that differ & \multicolumn{2}{c}{267} \\
+theorem statements in the closure that differ & \multicolumn{2}{c}{87} \\
+root-cause definitions (differ, dependencies agree) & \multicolumn{2}{c}{27} \\
+\bottomrule
+\end{tabular}
+\caption{The cross-revision comparison of \lean{riemannZeta s $\neq$ 0}. Data: \lean{lean/fidelity/RESULT\_2026-10-07.json}.}
+\label{tab:fidelity}
+\end{table}
+
+\Cref{tab:fidelity} summarizes the result. The statement itself is identical after normalization. Beneath it, 267 named definitions differ. Twenty-seven of them are root causes, definitions whose own named dependencies agree but whose bodies do not, and they fall into recognizable groups: Mathlib's refactor of the algebraic hierarchy (\lean{AddMonoid.mk}, \lean{Monoid.mk} and their siblings take different parents in a different order, and every projection changes with them); \lean{WellFoundedLT} is \lean{IsWellFounded} at one revision and \lean{WellFounded} at the other; \lean{MeasureTheory.eLpNorm} gained a \lean{[TopologicalSpace]} argument, and $\zeta$ is defined through Mellin-transform integrals so measure theory is in its closure; core \lean{Bool.and} is defined through a \lean{match} auxiliary at rc1 and directly through \lean{Bool.rec} at v4.34.1; and a dozen private or auxiliary constants (\lean{Real.instMax}, \lean{Nat.findX}, \lean{ENNReal.instLE} and others) changed content.
+
+None of this is surprising, and none of it is wrong. Every one of these refactors is meant to preserve the mathematics, and $\zeta$ is pinned down by its Dirichlet series on $\re s > 1$, its holomorphy on $\C \setminus \{1\}$ and the identity theorem, so the two \lean{riemannZeta}s are the same function by a standard argument. But that argument is not machine-checked, and with these two revisions it cannot be: no single kernel ever sees both closed terms. A grant that plugged the OpenAI theorem into the island corollary across the seam would have been, in the words we used in the registry, a mathematical identification and not a kernel check. The registry's design permits cross-island grants, and has one precedent; but that precedent was cross-\emph{island} at a common Mathlib, not demonstrably cross-\emph{meaning}. We judged the honest course to be to say so in words wherever the cross-revision pairing appeared, and then to remove the seam.
+
+\subsection{The single-pin port}
+
+The removal is mechanical in principle and was mechanical in practice. The import closure of \lean{DBNZeroFreeHalfplane} on the island is nineteen modules: the definitions, the $\xi$ representation and its integration by parts, the Hadamard product and its count, mean and linear-growth lemmas, the heat-flow step, the Hurwitz argument, the parametric theorem, and the corollary. Together they are $5{,}512$ lines. They import two modules of the LiCriterion library \cite{LiCrit} for $\xi$ as an entire function: \lean{Lc/XiZeros.lean}, which we copied unmodified, and \lean{Lc/LiCriterion/Basic.lean}, a $5{,}159$-line file of which the closure uses exactly three declarations (\lean{NontrivialZero}, \lean{riemannXi} and \lean{xi\_zeros\_are\_nontrivial\_zeros}); we copied those three verbatim with the file's \lean{open} lines and namespace into a trimmed shim, so that the module name, and hence every \lean{import} in the nineteen modules, stays the same, and we recorded the trimming as a modification under the library's Apache-2.0 licence. The upstream file also carries literature axioms that no \lean{dbn} theorem used; the island's axiom guard was already clean of them, and the shim does not include them.
+
+We copied all of it into OpenAI's workspace and built. Seventeen of the nineteen modules compiled unchanged, byte for byte (checked with \lean{cmp}). Two did not:
+
+\begin{itemize}[leftmargin=*]
+\item \lean{DBNHadamardProduct.lean}, line 207: \lean{Finset.prod\_le\_prod} became \lean{Finset.prod\_le\_prod$_0$}. Mathlib renamed the lemma for products of nonnegative factors on September 1, 2026, and gave the old name to a different lemma (the ordered-monoid version, formerly primed) with one argument fewer.
+\item \lean{DBNHadamardMean.lean}, line 116: the hypothesis of \lean{Real.posLog\_le\_posLog} changed from $0 \le x$ to $-1 \le x$. The weaker hypothesis is derived from the one the proof already had: \lean{(norm\_nonneg \_)} became \lean{(neg\_one\_lt\_zero.le.trans (norm\_nonneg \_))}.
+\end{itemize}
+
+Both are repairs inside proofs. No statement and no definition changed. The two patches are recorded as unified diffs in \lean{lean/patches/}, with the reason for each, and \lean{scripts/materialize.sh} applies them after copying the modules, so that the repository carries the island sources untouched and the change is visible. Two build options were restored to match each source package: the island builds with Lean's default \lean{autoImplicit := true}, OpenAI's package sets it \lean{false}, and the LiCriterion shim keeps its upstream options.
+
+After the port, \lean{dbn\_real\_zeros\_of\_qrh qrh\_seven\_eighths} typechecks in one environment, and the seam is gone for this theorem. The island's own artifacts at v4.34.0-rc1 are unchanged; they still pair with the bridge only across revisions, and the registry's statement of the bridge node still says so (\cref{sec:registry}).
+
+\subsection{Why not a Lake dependency}
+
+A reader who knows Lake will ask why the bridge is a recipe rather than a package that requires OpenAI's library. We tried that first. \lean{require OAI from git "https://github.com/openai/math.git" @ "adc7f124" / "lean"} runs \lean{lake update} for six minutes and then fails: OpenAI's lakefile patches twenty-three of its dependencies for Lean v4.34.1 compatibility, from a \lean{run\_cmd} during lakefile elaboration and from a \lean{post\_update} hook, and both assume that OpenAI's package is the workspace root. The hook refuses a checkout under a downstream \lean{.lake/packages}. Vendoring the import closure of \cref{thm:qrh}, about $2{,}924$ modules and $486{,}000$ lines plus parts of two further libraries, would have made us the maintainers of half a million lines we did not write. So \lean{materialize.sh} checks out OpenAI's \lean{lean/} directory unmodified at the pinned commit, verifies the toolchain and Mathlib pin, copies our files into its root, applies the two patches, and appends our \lean{lean\_lib} declarations to OpenAI's lakefile. OpenAI stays the root; their patches apply as intended; our modules build inside. On a laptop, starting from an already-built copy of their library, the two bridge modules compile in $45$ seconds; the full port compiles in $94$ seconds of wall time with the OpenAI closure replayed from cache. On a GitHub-hosted runner with no cache the whole workspace builds in about $80$ minutes.
+
+\section{Verification}\label{sec:verification}
+
+We describe the checks in the order in which they add independence from the authors.
+
+\subsection{The kernel, and the axiom guards}
+
+Every theorem in this paper was checked by Lean's kernel when its module compiled. Two guard modules, \lean{AxiomGuardQRHBridge.lean} and \lean{AxiomGuardDBNUnconditional.lean}, run \lean{\#print axioms} on \cref{thm:main}, on \cref{thm:qrh} in both its OpenAI and re-exported forms, on the corollary and its conditional instance, on de Bruijn's theorem, on the $\xi$ representation, on LiCriterion's $\xi$-zeros theorem, and on the evenness of $\Hfun$. All print \lean{[propext, Classical.choice, Quot.sound]}; none prints \lean{sorryAx}. The continuous-integration job greps for both facts and fails otherwise.
+
+\subsection{The second kernel: Comparator and nanoda}
+
+openai/ten-proofs Comparator \cite{Comparator} is a checker for formal challenges. Given a \emph{challenge} module, which states a theorem with a \lean{sorry} body, and a \emph{solution} module, which proves it, Comparator exports both environments with lean4export, checks that every constant the challenge declares has exactly the same definition in the solution, checks that the solution's proof uses only a whitelist of axioms, and replays the proof through Lean's kernel and, when asked, through nanoda \cite{nanoda}, an independently written kernel in Rust. A solution that proves a different theorem, or that redefines a challenge constant to make the theorem easier, is rejected at the constant comparison; a solution that smuggles in an axiom is rejected at the whitelist; a proof term the second kernel does not accept is rejected at replay.
+
+We ran Comparator, with nanoda on, on three configurations, all inside the materialized workspace:
+
+\begin{enumerate}[leftmargin=*]
+\item \textbf{The unconditional theorem.} The challenge \lean{ArdaDBNChallenge.lean} imports only Mathlib. It transcribes the definitions of \lean{DBN.thetaMoment}, \lean{DBN.$\Phi$}, \lean{DBN.HIntegrand} and \lean{DBN.H} verbatim from the island's \lean{DBNDefs.lean}, under that file's own \lean{open} line and namespace, and then states \cref{thm:main} with \lean{sorry}. The solution is \lean{ArdaDBNUnconditional}. Comparator's constant comparison therefore forces the solution's \lean{DBN.H} to be exactly the transcribed term: the solution cannot be proving the theorem about some other function called $\Hfun$. Verdict: ``nanoda kernel accepts the solution. Lean default kernel accepts the solution. Your solution is okay!'' In $473$ seconds and $9.1$~GB of memory on the author's machine; $760$ seconds in the independent audit; $29$ minutes for the whole Comparator stage on the CI runner.
+\item \textbf{The negative control.} The same challenge with one character changed: the exponent $e^{9u}$ in $\Phi$ becomes $e^{8u}$. Verdict: ``\lean{uncaught exception: Const does not match between challenge and target 'DBN.$\Phi$'}'', exit~1. The judge discriminates. The CI job requires this rejection and fails if the tampered challenge is ever accepted.
+\item \textbf{The half-plane re-export.} \lean{qrh\_seven\_eighths} in self-check mode (challenge module equal to solution module), which exercises the axiom whitelist and both kernel replays over OpenAI's entire proof. Verdict: accepted, $516$ seconds, $9.4$~GB. The Mathlib-only reading of OpenAI's statement had already been checked by our replay of their own challenge file \lean{ComparatorChallenges/QuasiRiemannHypothesis.lean}, which imports only Mathlib and states \cref{thm:qrh} with \lean{sorry}; that replay, and the replay of the three other family-003 challenges, was done on October 7 before any of this work began, and both kernels accepted all four.
+\end{enumerate}
+
+One footgun deserves recording for anyone who writes such a challenge. The first run of configuration~1 was rejected with ``Const does not match'' on \lean{DBN.$\Phi$} even though the text of $\Phi$ was identical. Under \lean{pp.all} the only difference was the auxiliary proof of the \lean{Nat.AtLeastTwo 4} instance inside $\Phi$. In \lean{DBNDefs.lean}, \lean{thetaMoment} is elaborated first; Lean abstracts that instance proof into \lean{DBN.thetaMoment.\_proof\_1} and reuses it in $\Phi$. A challenge without \lean{thetaMoment} generates \lean{DBN.$\Phi$.\_proof\_5} instead. Transcribing \lean{thetaMoment} too, although $\Hfun$ never mentions it, made the \lean{pp.all} dumps identical and the run accept. So a transcribed challenge must reproduce not only the definitions the statement mentions but the earlier definitions whose auxiliary lemmas those definitions reuse.
+
+Comparator's own sandbox, landrun, is Linux-only; the local runs used a pass-through shim and are therefore not sandboxed, which the logs say. The CI runs use the same shim on Linux for consistency with the project's other judge jobs.
+
+\subsection{The independent audit}
+
+On October 7, after the branch was pushed, a second session with no part in writing the proofs audited it from a fresh worktree of the pushed branch, without reading the authoring session's working directory. The audit \cite{Repo} is a table of claims against checks. The checks that matter most:
+
+\begin{itemize}[leftmargin=*]
+\item OpenAI's theorem statement, toolchain file, Mathlib pin and licence were fetched from GitHub at commit \lean{adc7f124}, not from any local copy, and compared with the bridge and with \lean{OAI\_PIN}.
+\item The challenge's transcription of $\Hfun$ was diffed against \lean{DBNDefs.lean} and against the registry's vocabulary mirror; identical up to documentation comments.
+\item The nineteen-module closure was recomputed from the island sources; the ported files were diffed against the island and found byte-identical except for exactly the two recorded patches; the LiCriterion shim was diffed against the upstream repository at its pinned commit.
+\item The bridge, port, theorem and both challenges were built from source ($11{,}900$ jobs; the $27$ project modules compiled rather than replayed from the authoring session's cache), the island corollary was recompiled from source on the island, and all axiom guards were re-run.
+\item All three Comparator configurations were re-run with the auditor's own fresh builds of Comparator and nanoda. Same three verdicts.
+\end{itemize}
+
+The audit also recorded a limitation that shaped what came next: every session on the machine commits under one git identity, so no session there could satisfy the registry's independence rule for a read-back. It is this limitation that the registry step was designed to expose.
+
+\subsection{Continuous integration}
+
+The Arda repository's workflow \lean{oai-qrh-bridge.yml} \cite{Arda} runs on every push that touches the island: it frees disk, materializes OpenAI's checkout cold, resolves their dependencies, fetches Mathlib's oleans, builds the five modules, saves a checkpoint even if the build fails so the next run resumes, re-elaborates the two committed artifact files against the built workspace (this is what the registry's coverage gate attributes to the artifacts), runs the axiom guards, builds Comparator from tag v4.34.0 with its toolchain file set to v4.34.1 (there is no v4.34.1 tag) and nanoda from source, and runs the three Comparator configurations with the rejection of the tampered control required. Its first run failed for a reason worth recording: the re-elaboration step runs in a directory with no \lean{lean-toolchain} file, and the runner has no elan default, so the step died with ``no default toolchain configured'' after the eighty-minute build had succeeded. Pinning \lean{ELAN\_TOOLCHAIN} for that step fixed it, and the rerun, restoring the checkpoint, went green in about $35$ minutes end to end. The accompanying repository's \lean{verify.yml} is the same recipe, run from this repository's own files.
+
+\subsection{The registry}\label{sec:registry}
+
+The Arda project tracks formal results in a registry of nodes, each a TOML file with a verbatim Lean statement, a status, a proof link to an artifact, and a provenance block. A node is \lean{draft} when registered; it becomes \lean{open} only when an independent read-back of its formal statement is recorded; it becomes \lean{proved} only when a verify gate confirms that the artifact declares exactly the registered statement and then proves it, that a runnable CI step compiles the artifact, and that the dependencies a reduction needs are already proved. Independence of a read-back is enforced by the tool: it refuses an auditor whose session or identity matches the node's registering author. Independence can also come from a second route: a separate CI job, the \emph{judge}, renders each proved node's registered statement as the type of a bridge theorem whose proof is the artifact's constant, builds it (which succeeds only if the artifact proves exactly the registered proposition), and runs Comparator with both kernels on it; a pass is recorded on the node with the verdict read from the job log and the artifact hashed at the judged commit.
+
+Four nodes were registered on October 7: the corollary for general $\theta$, its instance at $7/8$, the half-plane re-export, and \cref{thm:main}. Three things happened before any of them was granted, and the order matters.
+
+First, the read-backs. The authoring session had written the proofs and a second session had registered the nodes, so neither could record a read-back, and every session on the machine shared one git identity in any case. The project's design allows the operator to be the renderer. On October 9 the operator wrote the four read-backs in his own words under his own identity and session label; the tool accepted them as independent.
+
+Second, the grants. The verify gate flipped all four nodes to \lean{proved}, recording the SHA-256 of each artifact and each statement file.
+
+Third, the judge. The registry's judge could not consume the bridge island as it stood, because the island is a recipe rather than a Lake package that the judge could path-require; OpenAI's library has to be the workspace root. An extension (\lean{MATERIALIZED\_ROOT\_ISLANDS}) taught the judge to install its bridge modules inside the materialized workspace as an appended \lean{lean\_lib}, and a new CI job materializes the workspace, builds the bridge modules by name and runs Comparator on them. The extension was reviewed by the session that had audited the proofs, which verified among other things that the six pre-existing judge bundles were byte-identical after the change and that the two generated bridge theorems, with the registry's statement text as their type, were accepted by both kernels in its own workspace. The judge run on the granted registry passed all four nodes: the two island nodes in the existing \lean{dbn} shard, the two bridge nodes in the new job, each with nanoda. The records were written with \lean{log\_check = "verified"} and \lean{head\_check = "matched"}.
+
+The registered statements that the judge used as types are in \lean{provenance/registry/} of \cite{Repo}, and the generated bridge theorems in \lean{lean/judge/}. For \cref{thm:main} the bridge is
+\begin{lstlisting}
+theorem MissionJudge.RH_dbn_real_zeros_nine_thirtyseconds :
+    ∀ t : ℝ, 9 / 32 ≤ t → ∀ z : ℂ, DBN.H t z = 0 → z.im = 0 :=
+  dbn_real_zeros_of_qrh_unconditional
+\end{lstlisting}
+imported together with the island's two axiom guards, so that any constant of the statement's vocabulary re-declared by the artifact would be a duplicate-declaration error rather than a silent substitution. For these two nodes the vocabulary is \lean{DBN.H}, declared inside the guards' closure, and Mathlib's \lean{riemannZeta}, both written at the root with no \lean{open} context, so neither can be redirected.
+
+\subsection{What is checked and what is trusted}
+
+\begin{table}[h]\centering\small
+\begin{tabular}{p{0.52\textwidth}p{0.42\textwidth}}
+\toprule
+\textbf{Kernel-checked (Lean and nanoda)} & \textbf{Trusted as code or as definition} \\
+\midrule
+\cref{thm:main}, its proof term, and every ancestor: \cref{cor:conv}, \cref{thm:dB}, $\Hfun_0 = \xi/8$, the $\xi$-zeros theorem, OpenAI's \cref{thm:qrh} and its entire closure, all under three standard axioms &
+Mathlib's definitions of \lean{riemannZeta}, \lean{completedRiemannZeta$_0$}, the Bochner integral and the reals, as the meaning of the symbols \\
+\addlinespace
+That the challenge's transcribed $\Hfun_t$ is the $\Hfun_t$ of the theorem (Comparator constant comparison) &
+That the transcribed $\Hfun_t$ is the Polymath15 $\Hfun_t$ of \cref{eq:H} (by inspection of eleven lines) \\
+\addlinespace
+That the proof uses no axiom outside the whitelist &
+OpenAI's pinned tree at \lean{adc7f124}, verified byte-for-byte against the commit and never modified; about $2{,}900$ modules outside the island guards' import closure \\
+\addlinespace
+That the registered statement is the type of the artifact's theorem (the judge's bridge module builds) &
+Lean's kernel, nanoda, lean4export, Comparator, and the toolchain binaries \\
+\addlinespace
+That the island modules compiled at OpenAI's revision are the island modules (byte identity plus two recorded patches) &
+That the registry's read-backs describe the statements correctly (the operator's rendering; and the judge, which settles proof-matches-statement but not statement-matches-title) \\
+\bottomrule
+\end{tabular}
+\caption{The trust boundary for \cref{thm:main}.}
+\label{tab:trust}
+\end{table}
+
+\Cref{tab:trust} is the honest boundary. Two entries on the right deserve a sentence each. The pinned OpenAI tree is trusted in the sense that we did not read $486{,}000$ lines; we verified that the tree is the commit it claims to be, that the kernel accepts it, that a second kernel accepts it, and that the statement at its top is the one in their challenge file. That is the same trust anyone who cites \cref{thm:qrh} extends, and it is more than most citations get. And the definition of $\zeta$ is trusted in the sense that a formal theorem about \lean{riemannZeta} is a theorem about Mathlib's object; that Mathlib's object is Riemann's function is a matter of Mathlib's own documentation and its proofs of the Dirichlet series, the functional equation and the Euler product, which are in its library.
+
+\section{What this does and does not advance}\label{sec:frontier}
+
+\paragraph{On $\Lam$.} \Cref{thm:main} does not improve the known upper bound on $\Lam$. The ladder stands at $0.2$ \cite{PT}, and $9/32 = 0.28125$ is above it, above Polymath15's $0.22$, and below only de Bruijn's $1/2$. What is new is the kind of certificate: $9/32$ is a theorem whose entire proof, from the definition of $\Hfun_t$ through OpenAI's zero-free half-plane to the final application, has been replayed by two proof kernels; $0.22$ and $0.2$ rest on rigorous but unformalized computation. We do not suggest that this makes $9/32$ a better bound. It is a worse bound with a different warranty.
+
+\paragraph{On the route.} \Cref{cor:conv} is a verified conversion from zero-free half-planes to bounds on $\Lam$, and it is lossy in a way worth making explicit. It gives $\Lam \le 2(\theta - \tfrac12)^2$, so it beats the Polymath15 bound exactly when
+\[
+2\bigl(\theta - \tfrac12\bigr)^2 < 0.22 \iff \theta < \tfrac12 + \sqrt{0.11} \approx 0.8317,
+\]
+and it beats Platt--Trudgian when $\theta < \tfrac12 + \sqrt{0.1} \approx 0.8162$. A zero-free half-plane at $0.83$ would therefore set a new, kernel-checked record on $\Lam$ with no further work: the registry node for the general-$\theta$ corollary is proved, and a new half-plane theorem drops into it as a new instance. OpenAI's $7/8 = 0.875$ is close to that threshold and on the wrong side of it. Whether the methods of \cite{OAIqrh} can be pushed from $7/8$ toward $0.83$ is a question for the authors of that work, not for this paper.
+
+\paragraph{On the Riemann Hypothesis.} Nothing here bears on it. A half-plane at $\tfrac12 + \varepsilon$ gives $\Lam \le 2\varepsilon^2$ through this route, and $\Lam = 0$ requires $\varepsilon = 0$, which is the Riemann Hypothesis itself. The conversion cannot close the gap; at best it transports progress on the half-plane into progress on $\Lam$, with a quadratic loss. The registry marks every one of the four nodes, and this paper marks every section, with the sentence that the project has carried on every artifact since its first day: \lean{conjecture1\_proved = False}.
+
+\paragraph{On method.} Two things from the exercise seem to us to be of use beyond it. The first is the fidelity analysis of \cref{sec:seam}: when two formal results are to be composed across library revisions, exporting both and walking the meaning closure of the shared statement is cheap, mechanical, and decisive about whether a kernel can check the composition or whether a human must assert it. We expect this situation to become common as formal libraries are released by many hands at many pins. The second is the governance of \cref{sec:registry}. The useful part of it was not the tooling but the refusal built into the tooling: the read-back command would not accept a self-audit, and the judge would not record a pass on a node that was not yet granted. Those refusals forced the order read-back, grant, judge, record, and forced a person other than the authoring sessions into the loop. A result that enters the record that way carries its own provenance.
+
+\section*{Acknowledgements}
+
+The theorem $\zeta(s) \ne 0$ for $\re s > 7/8$ is OpenAI's \cite{OAIqrh,OAImath}, released under the Apache License 2.0; this paper adds one line to it and proves nothing about $\zeta$. The de Bruijn heat-flow machinery is the Arda project's \cite{Arda}; its $\xi$ is LiCriterion's \cite{LiCrit}; the second kernel is nanoda \cite{nanoda} through Comparator \cite{Comparator}; everything runs on Lean~4 and Mathlib \cite{Lean,Mathlib}. The formalization, the audit, the tooling and this paper were produced with extensive use of an AI coding assistant (Claude, Anthropic) under the direction of the author, in several concurrent sessions whose division of labour, including the independent audit and review, is recorded in the accompanying repository. The Lean kernel is the sole trusted component: every claim in this paper is either a kernel-checked theorem or labelled otherwise.
+
+\begin{thebibliography}{99}\small
+
+\bibitem{dB} N.~G. de Bruijn, The roots of trigonometric integrals, \emph{Duke Math.\ J.} 17 (1950), 197--226.
+
+\bibitem{Ne} C.~M. Newman, Fourier transforms with only real zeros, \emph{Proc.\ Amer.\ Math.\ Soc.} 61 (1976), 245--251.
+
+\bibitem{CNV} G.~Csordas, T.~S. Norfolk and R.~S. Varga, A lower bound for the de Bruijn--Newman constant $\Lambda$, \emph{Numer.\ Math.} 52 (1988), 483--497.
+
+\bibitem{CSV} G.~Csordas, W.~Smith and R.~S. Varga, Lehmer pairs of zeros, the de Bruijn--Newman constant $\Lambda$, and the Riemann Hypothesis, \emph{Constr.\ Approx.} 10 (1994), 107--129.
+
+\bibitem{Od} A.~M. Odlyzko, An improved bound for the de Bruijn--Newman constant, \emph{Numer.\ Algorithms} 25 (2000), 293--303.
+
+\bibitem{SGD} Y.~Saouter, X.~Gourdon and P.~Demichel, An improved lower bound for the de Bruijn--Newman constant, \emph{Math.\ Comp.} 80 (2011), 2281--2287.
+
+\bibitem{KKL} H.~Ki, Y.-O. Kim and J.~Lee, On the de Bruijn--Newman constant, \emph{Adv.\ Math.} 222 (2009), 281--306.
+
+\bibitem{RT} B.~Rodgers and T.~Tao, The de Bruijn--Newman constant is non-negative, \emph{Forum Math.\ Pi} 8 (2020), e6.
+
+\bibitem{P15} D.~H.~J. Polymath, Effective approximation of heat flow evolution of the Riemann $\xi$ function, and a new upper bound for the de Bruijn--Newman constant, \emph{Res.\ Math.\ Sci.} 6 (2019), 31.
+
+\bibitem{PT} D.~Platt and T.~Trudgian, The Riemann hypothesis is true up to $3 \cdot 10^{12}$, \emph{Bull.\ London Math.\ Soc.} 53 (2021), 792--797.
+
+\bibitem{OAIqrh} OpenAI, The Quasi-Riemann Hypothesis, OpenAI Math Release preprint \texttt{OAI:The-Quasi-Riemann-Hypothesis-October-5-2026} (2026); earlier version \texttt{OAI:The-Quasi-Riemann-Hypothesis-September-30-2026}, ``A zero-free half-plane $\mathrm{Re}(s) > 7/8$''. \url{https://github.com/openai/math/tree/main/preprints}.
+
+\bibitem{OAImath} OpenAI, \texttt{openai/math}: Lean formalizations and preprints, commit \texttt{adc7f1241b42e322a6451854ab7e4b4c146bf78a} (October 6, 2026), Apache License 2.0. \url{https://github.com/openai/math}. The theorem used here is \texttt{OAI.riemannZeta\_ne\_zero\_of\_seven\_eighths\_lt\_re} in \texttt{lean/OAI/NumberTheory/DirichletL/Nonvanishing.lean}; its Comparator challenge is \texttt{lean/ComparatorChallenges/QuasiRiemannHypothesis.lean}.
+
+\bibitem{Arda} P.~W. Murphy, Arda: the Telperion engine and the missions registry, \url{https://github.com/DrMurphyIsIn/Arda}. The \texttt{dbn} island is \texttt{telperion/examples/dbn/lean}; the bridge island is \texttt{telperion/examples/oai\_qrh\_bridge}; the registry nodes are \texttt{RH\_dbn\_real\_zeros\_of\_zeta\_halfplane}, \texttt{RH\_dbn\_real\_zeros\_of\_qrh}, \texttt{RH\_zeta\_zero\_free\_seven\_eighths} and \texttt{RH\_dbn\_real\_zeros\_nine\_thirtyseconds} in \texttt{telperion/missions/rh}.
+
+\bibitem{Repo} P.~W. Murphy, \texttt{qrh-debruijn-newman}: Lean sources, scripts, audit records and this paper, \url{https://github.com/DrMurphyIsIn/qrh-debruijn-newman}, v1.0.0 (2026). Zenodo DOI to be inserted on publication.
+
+\bibitem{LiCrit} N.~Bulka, \texttt{li-criterion-rh-equivalence-lean}, commit \texttt{35df682f}, Apache License 2.0. \url{https://github.com/nicholasbulka/li-criterion-rh-equivalence-lean}.
+
+\bibitem{Comparator} Lean FRO and OpenAI, \texttt{comparator}: a checker for formal challenges (openai/ten-proofs Comparator), tag v4.34.0. \url{https://github.com/leanprover/comparator}.
+
+\bibitem{nanoda} C.~Kernan (ammkrn), \texttt{nanoda\_lib}: a type checker for Lean~4 export files, in Rust. \url{https://github.com/ammkrn/nanoda_lib}.
+
+\bibitem{l4x} \texttt{lean4export}: an exporter for Lean~4 environments. \url{https://github.com/leanprover/lean4export}.
+
+\bibitem{Lean} L.~de Moura and S.~Ullrich, The Lean 4 theorem prover and programming language, in \emph{Automated Deduction -- CADE 28}, LNCS 12699, Springer (2021), 625--635.
+
+\bibitem{Mathlib} The mathlib Community, The Lean mathematical library, in \emph{CPP 2020}, ACM (2020), 367--381. Revisions \texttt{de5ce8a9} and \texttt{d13f23b723b8a846827a245b89c10fc7d3f11612} (2026).
+
+\end{thebibliography}
+
+\appendix
+
+\section{Reproduction}\label{app:repro}
+
+The repository \cite{Repo} is self-contained apart from Lean, Mathlib and OpenAI's library, which it fetches at pinned commits. From a clean clone:
+\begin{verbatim}
+scripts/materialize.sh          # openai/math lean/ at adc7f124, our files copied in
+cd work/oai
+lake update && lake exe cache get
+lake build ArdaQRHBridge AxiomGuardQRHBridge ArdaDBNUnconditional \
+           ArdaDBNChallenge ArdaDBNNegativeControl
+lake env lean AxiomGuardDBNUnconditional.lean   # 3 axioms, no sorryAx
+\end{verbatim}
+The first build compiles OpenAI's import closure, about $2{,}924$ modules and $11{,}900$ Lake jobs, and needs about $25$~GB of disk and several CPU-hours (about $80$ minutes on a 4-core GitHub runner). For the Comparator stage, build \texttt{leanprover/comparator} at tag v4.34.0 with its \texttt{lean-toolchain} set to \texttt{leanprover/lean4:v4.34.1}, build \texttt{nanoda\_lib} with \texttt{cargo build --release}, point \texttt{COMPARATOR\_LEAN4EXPORT} and \texttt{COMPARATOR\_NANODA} at the binaries (and \texttt{COMPARATOR\_LANDRUN} at a pass-through shim where landrun is unavailable), and run from \texttt{work/oai}:
+\begin{verbatim}
+lake env comparator dbn_real_zeros_of_qrh_unconditional.comparator.json # accept
+lake env comparator qrh_seven_eighths.comparator.json                   # accept
+lake env comparator tampered.comparator.json                            # REJECT
+lake build MissionChallenges.RH_dbn_real_zeros_nine_thirtyseconds \
+           MissionChallenges.RH_zeta_zero_free_seven_eighths
+lake env comparator RH_dbn_real_zeros_nine_thirtyseconds.comparator.json
+lake env comparator RH_zeta_zero_free_seven_eighths.comparator.json      # registry form
+\end{verbatim}
+Each positive configuration prints ``Your solution is okay!''; the tampered one fails with ``Const does not match between challenge and target 'DBN.$\Phi$'''. Each Comparator run takes eight to thirteen minutes and about $9$~GB of memory. The workflow \texttt{.github/workflows/verify.yml} is this recipe, verbatim.
+
+To re-run the cross-revision comparison of \cref{sec:seam}, \texttt{lean/fidelity/run\_fidelity.sh} needs a built checkout of the Arda \texttt{dbn} island at its own revision in addition to the materialized workspace; its output on October 7 is \texttt{lean/fidelity/RESULT\_2026-10-07.json} and \texttt{root\_causes\_2026-10-07.txt}.
+
+\section{The verdicts, verbatim}\label{app:logs}
+
+Local, author's machine, October 7, 2026 (\texttt{logs/comparator\_local\_2026-10-07.txt}):
+\begin{verbatim}
+## comparator_qrh_seven_eighths
+nanoda kernel accepts the solution
+Lean default kernel accepts the solution
+Your solution is okay!
+      516.18 real       612.10 user        25.56 sys
+          9446866944  maximum resident set size
+EXIT 0
+
+## comparator_unconditional
+nanoda kernel accepts the solution
+Lean default kernel accepts the solution
+Your solution is okay!
+      473.46 real       526.55 user        31.98 sys
+          9146286080  maximum resident set size
+EXIT 0
+
+## comparator_negative_control
+uncaught exception: Const does not match between challenge and target 'DBN.Phi'
+EXIT 1
+\end{verbatim}
+
+Independent audit, second session, own Comparator and nanoda builds, October 7 (\texttt{docs/QRH\_DBN\_AUDIT\_2026-10-07\_e9.md}): unconditional accepted by both kernels, $760$~s; tampered rejected on \texttt{DBN.$\Phi$}, $257$~s; \texttt{qrh\_seven\_eighths} accepted by both kernels, $758$~s.
+
+Continuous integration, Arda run 37728388605, October 8 (\texttt{logs/ci\_oai\_qrh\_bridge\_run\_37728388605.txt}):
+\begin{verbatim}
+ACCEPTED: dbn_real_zeros_of_qrh_unconditional
+ACCEPTED: qrh_seven_eighths
+REJECTED as required: uncaught exception: Const does not match between
+  challenge and target 'DBN.Phi'
+\end{verbatim}
+
+Registry judge, Arda run 37955041118, October 9 (\texttt{logs/ci\_judge\_run\_37955041118.txt}):
+\begin{verbatim}
+COMPARATOR PASS island=dbn node=RH_dbn_real_zeros_of_zeta_halfplane
+    theorem=dbn_real_zeros_of_zeta_halfplane run=37955041118 kernel=nanoda
+COMPARATOR PASS island=dbn node=RH_dbn_real_zeros_of_qrh
+    theorem=dbn_real_zeros_of_qrh run=37955041118 kernel=nanoda
+COMPARATOR PASS island=oai_qrh_bridge node=RH_zeta_zero_free_seven_eighths
+    theorem=qrh_seven_eighths run=37955041118 kernel=nanoda
+COMPARATOR PASS island=oai_qrh_bridge node=RH_dbn_real_zeros_nine_thirtyseconds
+    theorem=dbn_real_zeros_of_qrh_unconditional run=37955041118 kernel=nanoda
+\end{verbatim}
+
+Axiom guard, every run:
+\begin{verbatim}
+'dbn_real_zeros_of_qrh_unconditional' depends on axioms:
+    [propext, Classical.choice, Quot.sound]
+'dbn_real_zeros_of_qrh' depends on axioms: [propext, Classical.choice, Quot.sound]
+'dbn_real_zeros_of_zeta_halfplane' depends on axioms:
+    [propext, Classical.choice, Quot.sound]
+'qrh_seven_eighths' depends on axioms: [propext, Classical.choice, Quot.sound]
+'dbn_debruijn_parametric' depends on axioms: [propext, Classical.choice, Quot.sound]
+'dbn_H0_eq_xi' depends on axioms: [propext, Classical.choice, Quot.sound]
+'LiCriterion.xi_zeros_are_nontrivial_zeros' depends on axioms:
+    [propext, Classical.choice, Quot.sound]
+'DBN.H_neg' depends on axioms: [propext, Classical.choice, Quot.sound]
+\end{verbatim}
+
+\end{document}

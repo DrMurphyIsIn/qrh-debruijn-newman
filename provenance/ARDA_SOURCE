@@ -1,0 +1,7 @@
+source_repo=https://github.com/DrMurphyIsIn/Arda
+source_commit=9d224adfad0b78708dbcc4ab67d451e4b4bda859
+copied=2026-10-09
+telperion_examples_dbn_lean=19 modules (DBN*.lean), byte-identical, pre-patch
+telperion_examples_oai_qrh_bridge=lean/, dbn_port/, fidelity/, logs/, OAI_PIN, materialize.sh
+telperion_missions_judge_oai_qrh_bridge=bundle as judged in run 37955041118
+telperion_missions_rh_nodes=four node records + statements

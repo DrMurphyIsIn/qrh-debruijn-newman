@@ -1,0 +1,43 @@
+# CI judge verdicts, missions-comparator run 37955041118 (Arda, head b96be4b5d), 2026-10-09
+# https://github.com/DrMurphyIsIn/Arda/actions/runs/37955041118
+
+## job: judge dbn 0/1 (113903816248)
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_H0_eq_xi theorem=dbn_H0_eq_xi run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_H0_zero_strip theorem=dbn_H0_zero_strip run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_debruijn_parametric theorem=dbn_debruijn_parametric run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_debruijn_real_zeros theorem=dbn_debruijn_real_zeros run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_real_zeros_of_qrh theorem=dbn_real_zeros_of_qrh run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_real_zeros_of_zeta_halfplane theorem=dbn_real_zeros_of_zeta_halfplane run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_real_zeros_upset theorem=dbn_real_zeros_upset run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_rh_iff_H0_real_zeros theorem=dbn_rh_iff_H0_real_zeros run=37955041118 kernel=nanoda
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=dbn node=RH_dbn_rh_iff_real_zeros_nonneg_t theorem=dbn_rh_iff_real_zeros_nonneg_t run=37955041118 kernel=nanoda
+passed: 9
+
+## job: judge-oai-qrh-bridge (113903780074)
+nanoda kernel accepts the solution
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=oai_qrh_bridge node=RH_dbn_real_zeros_nine_thirtyseconds theorem=dbn_real_zeros_of_qrh_unconditional run=37955041118 kernel=nanoda
+nanoda kernel accepts the solution
+Lean default kernel accepts the solution
+Your solution is okay!
+COMPARATOR PASS island=oai_qrh_bridge node=RH_zeta_zero_free_seven_eighths theorem=qrh_seven_eighths run=37955041118 kernel=nanoda
+passed: 2

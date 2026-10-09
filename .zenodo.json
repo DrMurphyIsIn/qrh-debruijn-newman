@@ -1,0 +1,14 @@
+{
+  "title": "A kernel-checked bound Lambda <= 9/32 for the de Bruijn-Newman constant from OpenAI's quasi-Riemann hypothesis",
+  "creators": [{"name": "Murphy, Peter W."}],
+  "description": "Lean 4 formalization, verification scripts, audit records and paper for the bound Lambda <= 9/32 on the de Bruijn-Newman constant, obtained by composing OpenAI's kernel-checked quasi-Riemann hypothesis (riemannZeta s != 0 for Re s > 7/8; openai/math, commit adc7f124, Apache-2.0) with de Bruijn's 1950 heat-flow theorem as formalized on the Arda dbn island, in one Lean environment at OpenAI's Mathlib pin. The theorem (every zero of H_t is real for every t >= 9/32) depends only on propext, Classical.choice and Quot.sound; it was re-checked by a second kernel (nanoda) through openai/ten-proofs Comparator against a challenge that imports only Mathlib, with a tampered challenge rejected; independently audited; and judged in CI against the registered statement. It is the first bound below de Bruijn's 1/2 that is kernel-checked end to end. It is weaker than the numerical bounds 0.22 (Polymath15) and 0.2 (Platt-Trudgian), and it is not the Riemann Hypothesis. Not yet refereed. Licensing: Lean sources and scripts Apache-2.0; paper and prose CC-BY-4.0; OpenAI's theorem is theirs under Apache-2.0 and is not vendored.",
+  "license": "Apache-2.0",
+  "upload_type": "software",
+  "keywords": ["de Bruijn-Newman constant", "Riemann zeta function", "zero-free region", "quasi-Riemann hypothesis", "Lean 4", "formal verification", "Comparator"],
+  "version": "v1.0.0",
+  "related_identifiers": [
+    {"identifier": "https://github.com/DrMurphyIsIn/qrh-debruijn-newman", "relation": "isSupplementTo", "scheme": "url"},
+    {"identifier": "https://github.com/openai/math/tree/adc7f1241b42e322a6451854ab7e4b4c146bf78a", "relation": "isDerivedFrom", "scheme": "url"},
+    {"identifier": "https://github.com/DrMurphyIsIn/Arda", "relation": "isDerivedFrom", "scheme": "url"}
+  ]
+}

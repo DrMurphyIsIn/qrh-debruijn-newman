@@ -1,0 +1,11 @@
+--- a/DBNHadamardProduct.lean	2026-10-07 14:29:49
++++ b/DBNHadamardProduct.lean	2026-10-07 14:29:49
+@@ -204,7 +204,7 @@
+   calc ‖∏ k ∈ Finset.range n, (1 - z ^ 2 * τ k ^ 2)‖
+       ≤ ∏ k ∈ Finset.range n, ‖1 - z ^ 2 * τ k ^ 2‖ := Finset.norm_prod_le _ _
+     _ ≤ ∏ k ∈ Finset.range n, Real.exp ((1 + 2 / p) * (‖z‖ ^ p * ‖τ k‖ ^ p)) :=
+-        Finset.prod_le_prod (fun k _ ↦ norm_nonneg _) (fun k _ ↦ norm_factor_le_exp hp0 hp2 z k)
++        Finset.prod_le_prod₀ (fun k _ ↦ norm_nonneg _) (fun k _ ↦ norm_factor_le_exp hp0 hp2 z k)
+     _ = Real.exp (∑ k ∈ Finset.range n, (1 + 2 / p) * (‖z‖ ^ p * ‖τ k‖ ^ p)) :=
+         (Real.exp_sum _ _).symm
+     _ = Real.exp ((1 + 2 / p) * ‖z‖ ^ p * ∑ k ∈ Finset.range n, ‖τ k‖ ^ p) := by

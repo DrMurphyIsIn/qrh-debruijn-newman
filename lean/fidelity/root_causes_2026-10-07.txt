@@ -1,0 +1,85 @@
+QRHFidelity.stmt Pi Complex, Pi ((((LT.lt.{0} Real) Real.instLT) ((((((HDiv.hDiv.{0,0,0} Real) Real) Real) ((instHDiv.{0} Real) ((DivInvMonoid.toDiv.{0} Real) Real.instDivInvMonoid))) (((OfNat.ofNat.{0} Real) n7) ((((instOfNatAtLeastTwo.{0} Real) n7) Real.instNatCast) ((Nat.instAtLeastTwoHAddOfNat (((OfNat.ofNat.{0} Nat) n6) (instOfNatNat n6))) (Nat.instNeZeroSucc (((OfNat.ofNat.{0} Nat) n5) (instOfNatNat n5))))))) (((OfNat.ofNat.{0} Real) n8) ((((instOfNatAtLeastTwo.{0} Real) n8) Real.instNatCast) ((Nat.instAtLeastTwoHAddOfNat (((OfNat.ofNat.{0} Nat) n7) (instOfNatNat n7))) (Nat.instNeZeroSucc (((OfNat.ofNat.{0} Nat) n6) (instOfNatNat n6)))))))) (Complex.re #0)), (((Ne.{S(0)} Complex) (riemannZeta #1)) (((OfNat.ofNat.{0} Complex) n0) ((Zero.toOfNat0.{0} Complex) Complex.instZero)))
+
+QRHFidelity.stmtMathlib Pi Complex, Pi ((((LT.lt.{0} Real) Real.instLT) ((((((HDiv.hDiv.{0,0,0} Real) Real) Real) ((instHDiv.{0} Real) ((DivInvMonoid.toDiv.{0} Real) Real.instDivInvMonoid))) (((OfNat.ofNat.{0} Real) n7) ((((instOfNatAtLeastTwo.{0} Real) n7) Real.instNatCast) QRHFidelity.stmtMathlib._proof_1))) (((OfNat.ofNat.{0} Real) n8) ((((instOfNatAtLeastTwo.{0} Real) n8) Real.instNatCast) QRHFidelity.stmtMathlib._proof_2)))) (Complex.re #0)), (((Ne.{S(0)} Complex) (riemannZeta #1)) (((OfNat.ofNat.{0} Complex) n0) ((Zero.toOfNat0.{0} Complex) Complex.instZero)))
+
+== AddMonoid.mk ctor type DIFF value same extra DIFF
+  A ty: Pi Sort S(Pu), Pi (AddSemigroup.{Pu} #0), Pi (Zero.{Pu} #1), Pi Pi #2, (((Eq.{S(Pu)} #3) ((((((HAdd.hAdd.{Pu,Pu,Pu} #3) #3) #3) ((instHAdd.{Pu} #3) ((AddSemigroup.toAdd.{Pu} #3) #2))) (((OfNat.ofNat.{Pu} #3) n0) ((Zero.toOfNat0.{Pu} #3) #1))) #0)) #0), Pi Pi #3, (((Eq.{S(Pu)} #4) ((((((HAdd.hAdd.{Pu,Pu,Pu} #4) #4) #4) ((instHAdd.{Pu} #4) ((AddSemigroup.toAdd.{Pu} #4) #3))) #0) (((OfNat.ofNat.{Pu} #4) n0) ((Zero.toOfNat0.{Pu} #4) #2)))) #0), Pi (NSMul.{Pu} #4), Pi ((autoParam.{0} Pi #5, (((Eq.{S(Pu)} #6) ((((((HSMul.hSMul.{0,Pu,Pu} Nat) #6) #6) (((instHSMul.{0,Pu} Nat) #6) ((NSMul.toSMul.{Pu} #
+  B ty: Pi Sort S(Pu_2), Pi (Zero.{Pu_2} #0), Pi (Add.{Pu_2} #1), Pi Pi #2, Pi #3, Pi #4, (((Eq.{S(Pu_2)} #5) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHAdd.{Pu_2} #5) #3)) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHAdd.{Pu_2} #5) #3)) #2) #1)) #0)) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHAdd.{Pu_2} #5) #3)) #2) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHAdd.{Pu_2} #5) #3)) #1) #0))), Pi Pi #3, (((Eq.{S(Pu_2)} #4) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #4) #4) #4) ((instHAdd.{Pu_2} #4) #2)) (((OfNat.ofNat.{Pu_2} #4) n0) ((Zero.toOfNat0.{Pu_2} #4) #3))) #0)) #0), Pi Pi 
+== AddMonoid.toAddSemigroup def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (AddMonoid.{Pu} #0), #0.AddMonoid#0
+  B val: fun Sort S(Pu_2), fun (AddMonoid.{Pu_2} #0), (((AddSemigroup.mk.{Pu_2} #1) ((AddMonoid.toAdd.{Pu_2} #1) #0)) ((AddMonoid.add_assoc.{Pu_2} #1) #0))
+== AddMonoid.toNSMul def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (AddMonoid.{Pu} #0), #0.AddMonoid#4
+  B val: fun Sort S(Pu_2), fun (AddMonoid.{Pu_2} #0), #0.AddMonoid#5
+== AddMonoid.toZero def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (AddMonoid.{Pu} #0), #0.AddMonoid#1
+  B val: fun Sort S(Pu_2), fun (AddMonoid.{Pu_2} #0), #0.AddMonoid#0
+== AddZeroClass.mk ctor type DIFF value same extra DIFF
+  A ty: Pi Sort S(Pu), Pi (AddZero.{Pu} #0), Pi Pi #1, (((Eq.{S(Pu)} #2) ((((((HAdd.hAdd.{Pu,Pu,Pu} #2) #2) #2) ((instHAdd.{Pu} #2) ((AddZero.toAdd.{Pu} #2) #1))) (((OfNat.ofNat.{Pu} #2) n0) ((Zero.toOfNat0.{Pu} #2) ((AddZero.toZero.{Pu} #2) #1)))) #0)) #0), Pi Pi #2, (((Eq.{S(Pu)} #3) ((((((HAdd.hAdd.{Pu,Pu,Pu} #3) #3) #3) ((instHAdd.{Pu} #3) ((AddZero.toAdd.{Pu} #3) #2))) #0) (((OfNat.ofNat.{Pu} #3) n0) ((Zero.toOfNat0.{Pu} #3) ((AddZero.toZero.{Pu} #3) #2))))) #0), (AddZeroClass.{Pu} #3)
+  B ty: Pi Sort S(Pu_2), Pi (Zero.{Pu_2} #0), Pi (Add.{Pu_2} #1), Pi Pi #2, (((Eq.{S(Pu_2)} #3) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #3) #3) #3) ((instHAdd.{Pu_2} #3) #1)) (((OfNat.ofNat.{Pu_2} #3) n0) ((Zero.toOfNat0.{Pu_2} #3) #2))) #0)) #0), Pi Pi #3, (((Eq.{S(Pu_2)} #4) ((((((HAdd.hAdd.{Pu_2,Pu_2,Pu_2} #4) #4) #4) ((instHAdd.{Pu_2} #4) #2)) #0) (((OfNat.ofNat.{Pu_2} #4) n0) ((Zero.toOfNat0.{Pu_2} #4) #3)))) #0), (AddZeroClass.{Pu_2} #4)
+== AddZeroClass.toAddZero def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (AddZeroClass.{Pu} #0), #0.AddZeroClass#0
+  B val: fun Sort S(Pu_2), fun (AddZeroClass.{Pu_2} #0), (((AddZero.mk.{Pu_2} #1) ((AddZeroClass.toZero.{Pu_2} #1) #0)) ((AddZeroClass.toAdd.{Pu_2} #1) #0))
+== Bool.and def type same value DIFF extra same
+  A val: fun Bool, fun Bool, ((((Bool.and.match_1.{S(0)} fun Bool, Bool) #1) fun Unit, Bool.false) fun Unit, #1)
+  B val: fun Bool, fun Bool, ((((Bool.rec.{S(0)} fun Bool, Bool) Bool.false) #0) #1)
+== ENNReal.instLE def type same value DIFF extra same
+  A val: ((LE.mk.{0} ENNReal) ENNReal.instLE._aux_1)
+  B val: ((LE.mk.{0} ENNReal) ENNReal.instLE._aux_1)
+== Finsupp inductive type DIFF value same extra same
+  A ty: Pi Sort S(Pu_9), Pi Sort S(Pu_10), Pi (Zero.{Pu_10} #0), Sort max(S(Pu_10),S(Pu_9))
+  B ty: Pi Sort S(Pu_8), Pi Sort S(Pu_9), Pi (Zero.{Pu_9} #0), Sort max(S(Pu_8),S(Pu_9))
+== MeasureTheory.eLpNorm def type DIFF value DIFF extra same
+  A ty: Pi Sort S(Pu_1), Pi Sort S(Pu_2), Pi (ENorm.{Pu_2} #0), Pi (MeasurableSpace.{Pu_1} #2), Pi Pi #3, #3, Pi ENNReal, Pi ((autoParam.{S(Pu_1)} ((MeasureTheory.Measure.{Pu_1} #5) #2)) MeasureTheory.eLpNorm._auto_1), ENNReal
+  B ty: Pi Sort S(Pu_1), Pi Sort S(Pu_2), Pi (ENorm.{Pu_2} #0), Pi (TopologicalSpace.{Pu_2} #1), Pi (MeasurableSpace.{Pu_1} #3), Pi Pi #4, #4, Pi ENNReal, Pi ((autoParam.{S(Pu_1)} ((MeasureTheory.Measure.{Pu_1} #6) #2)) MeasureTheory.eLpNorm._auto_1), ENNReal
+== Monoid.mk ctor type DIFF value same extra DIFF
+  A ty: Pi Sort S(Pu), Pi (Semigroup.{Pu} #0), Pi (One.{Pu} #1), Pi Pi #2, (((Eq.{S(Pu)} #3) ((((((HMul.hMul.{Pu,Pu,Pu} #3) #3) #3) ((instHMul.{Pu} #3) ((Semigroup.toMul.{Pu} #3) #2))) (((OfNat.ofNat.{Pu} #3) n1) ((One.toOfNat1.{Pu} #3) #1))) #0)) #0), Pi Pi #3, (((Eq.{S(Pu)} #4) ((((((HMul.hMul.{Pu,Pu,Pu} #4) #4) #4) ((instHMul.{Pu} #4) ((Semigroup.toMul.{Pu} #4) #3))) #0) (((OfNat.ofNat.{Pu} #4) n1) ((One.toOfNat1.{Pu} #4) #2)))) #0), Pi (NPow.{Pu} #4), Pi ((autoParam.{0} Pi #5, (((Eq.{S(Pu)} #6) ((((((HPow.hPow.{Pu,0,Pu} #6) Nat) #6) (((instHPow.{Pu,0} #6) Nat) ((NPow.toPow.{Pu} #6) #1))) #0) (((Of
+  B ty: Pi Sort S(Pu_2), Pi (One.{Pu_2} #0), Pi (Mul.{Pu_2} #1), Pi Pi #2, Pi #3, Pi #4, (((Eq.{S(Pu_2)} #5) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHMul.{Pu_2} #5) #3)) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHMul.{Pu_2} #5) #3)) #2) #1)) #0)) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHMul.{Pu_2} #5) #3)) #2) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #5) #5) #5) ((instHMul.{Pu_2} #5) #3)) #1) #0))), Pi Pi #3, (((Eq.{S(Pu_2)} #4) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #4) #4) #4) ((instHMul.{Pu_2} #4) #2)) (((OfNat.ofNat.{Pu_2} #4) n1) ((One.toOfNat1.{Pu_2} #4) #3))) #0)) #0), Pi Pi #4
+== Monoid.toNPow def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (Monoid.{Pu} #0), #0.Monoid#4
+  B val: fun Sort S(Pu_2), fun (Monoid.{Pu_2} #0), #0.Monoid#5
+== Monoid.toOne def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (Monoid.{Pu} #0), #0.Monoid#1
+  B val: fun Sort S(Pu_2), fun (Monoid.{Pu_2} #0), #0.Monoid#0
+== Monoid.toSemigroup def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (Monoid.{Pu} #0), #0.Monoid#0
+  B val: fun Sort S(Pu_2), fun (Monoid.{Pu_2} #0), (((Semigroup.mk.{Pu_2} #1) ((Monoid.toMul.{Pu_2} #1) #0)) ((Monoid.mul_assoc.{Pu_2} #1) #0))
+== MulOneClass.mk ctor type DIFF value same extra DIFF
+  A ty: Pi Sort S(Pu), Pi (MulOne.{Pu} #0), Pi Pi #1, (((Eq.{S(Pu)} #2) ((((((HMul.hMul.{Pu,Pu,Pu} #2) #2) #2) ((instHMul.{Pu} #2) ((MulOne.toMul.{Pu} #2) #1))) (((OfNat.ofNat.{Pu} #2) n1) ((One.toOfNat1.{Pu} #2) ((MulOne.toOne.{Pu} #2) #1)))) #0)) #0), Pi Pi #2, (((Eq.{S(Pu)} #3) ((((((HMul.hMul.{Pu,Pu,Pu} #3) #3) #3) ((instHMul.{Pu} #3) ((MulOne.toMul.{Pu} #3) #2))) #0) (((OfNat.ofNat.{Pu} #3) n1) ((One.toOfNat1.{Pu} #3) ((MulOne.toOne.{Pu} #3) #2))))) #0), (MulOneClass.{Pu} #3)
+  B ty: Pi Sort S(Pu_2), Pi (One.{Pu_2} #0), Pi (Mul.{Pu_2} #1), Pi Pi #2, (((Eq.{S(Pu_2)} #3) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #3) #3) #3) ((instHMul.{Pu_2} #3) #1)) (((OfNat.ofNat.{Pu_2} #3) n1) ((One.toOfNat1.{Pu_2} #3) #2))) #0)) #0), Pi Pi #3, (((Eq.{S(Pu_2)} #4) ((((((HMul.hMul.{Pu_2,Pu_2,Pu_2} #4) #4) #4) ((instHMul.{Pu_2} #4) #2)) #0) (((OfNat.ofNat.{Pu_2} #4) n1) ((One.toOfNat1.{Pu_2} #4) #3)))) #0), (MulOneClass.{Pu_2} #4)
+== MulOneClass.toMulOne def type same value DIFF extra same
+  A val: fun Sort S(Pu), fun (MulOneClass.{Pu} #0), #0.MulOneClass#0
+  B val: fun Sort S(Pu_2), fun (MulOneClass.{Pu_2} #0), (((MulOne.mk.{Pu_2} #1) ((MulOneClass.toOne.{Pu_2} #1) #0)) ((MulOneClass.toMul.{Pu_2} #1) #0))
+== NNReal.instSemilatticeSup def type same value DIFF extra same
+  A val: ((((((SemilatticeSup.mk.{0} NNReal) NNReal.instPartialOrder) NNReal.instSemilatticeSup._aux_1) NNReal.instSemilatticeSup._proof_3) NNReal.instSemilatticeSup._proof_4) NNReal.instSemilatticeSup._proof_5)
+  B val: ((((((SemilatticeSup.mk.{0} NNReal) NNReal.instPartialOrder) NNReal.instSemilatticeSup._aux_1) NNReal.instSemilatticeSup._proof_3) NNReal.instSemilatticeSup._proof_4) NNReal.instSemilatticeSup._proof_5)
+== Nat.findX def type same value DIFF extra same
+  A val: fun Pi Nat, Sort 0, fun ((DecidablePred.{S(0)} Nat) #0), fun ((Exists.{S(0)} Nat) fun Nat, (#2 #0)), (((((((WellFounded.fix.{S(0),S(0)} Nat) fun Nat, Pi Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #1), (Not (#5 #1)), ((Subtype.{S(0)} Nat) fun Nat, ((And (#5 #0)) Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #1), (Not (#7 #1))))) (_private.Mathlib.Data.Nat.Find.0.Nat.lbp #2)) ((_private.Mathlib.Data.Nat.Find.0.Nat.wf_lbp #2) #0)) fun Nat, fun Pi Nat, Pi (((_private.Mathlib.Data.Nat.Find.0.Nat.lbp #4) #0) #1), Pi Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #2), (Not (#7 #1)), ((Subtype.{S(0)} Nat) fun Nat, ((And (#7 #0)) Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #1), (Not (#9 #1)))), fun P
+  B val: fun Pi Nat, Sort 0, fun ((DecidablePred.{S(0)} Nat) #0), fun ((Exists.{S(0)} Nat) fun Nat, (#2 #0)), (((((((WellFounded.fix.{S(0),S(0)} Nat) fun Nat, Pi Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #1), (Not (#5 #1)), ((Subtype.{S(0)} Nat) fun Nat, ((And (#5 #0)) Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #1), (Not (#7 #1))))) (_private.Mathlib.Data.Nat.Find.0.Nat.lbp #2)) ((_private.Mathlib.Data.Nat.Find.0.Nat.wf_lbp #2) #0)) fun Nat, fun Pi Nat, Pi (((_private.Mathlib.Data.Nat.Find.0.Nat.lbp #4) #0) #1), Pi Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #2), (Not (#7 #1)), ((Subtype.{S(0)} Nat) fun Nat, ((And (#7 #0)) Pi Nat, Pi ((((LT.lt.{0} Nat) instLTNat) #0) #1), (Not (#9 #1)))), fun P
+== Real.instMax def type same value DIFF extra same
+  A val: ((Max.mk.{0} Real) _private.Mathlib.Data.Real.Basic.0.Real.sup)
+  B val: ((Max.mk.{0} Real) _private.Mathlib.Basic.Real.Basic.0.Real.sup)
+== Real.instMin def type same value DIFF extra same
+  A val: ((Min.mk.{0} Real) _private.Mathlib.Data.Real.Basic.0.Real.inf)
+  B val: ((Min.mk.{0} Real) _private.Mathlib.Basic.Real.Basic.0.Real.inf)
+== Semiring.toModule def type same value DIFF extra same
+  A val: fun Sort S(Pu_1), fun (Semiring.{Pu_1} #0), (((((((Module.mk.{Pu_1,Pu_1} #1) #1) #0) ((Semiring.toAddCommMonoid.{Pu_1} #1) #0)) (((((((DistribMulAction.mk.{Pu_1,Pu_1} #1) #1) ((Semiring.toMonoid.{Pu_1} #1) #0)) ((AddCommMonoid.toAddMonoid.{Pu_1} #1) ((Semiring.toAddCommMonoid.{Pu_1} #1) #0))) ((Monoid.toMulAction.{Pu_1} #1) ((Semiring.toMonoid.{Pu_1} #1) #0))) ((Semiring.mul_zero.{Pu_1} #1) #0)) ((Semiring.toModule._proof_1.{Pu_1} #1) #0))) ((Semiring.toModule._proof_2.{Pu_1} #1) #0)) ((Semiring.zero_mul.{Pu_1} #1) #0))
+  B val: fun Sort S(Pu_1), fun (Semiring.{Pu_1} #0), (((((((Module.mk.{Pu_1,Pu_1} #1) #1) #0) ((Semiring.toAddCommMonoid.{Pu_1} #1) #0)) (((((((DistribMulAction.mk.{Pu_1,Pu_1} #1) #1) ((Semiring.toMonoid.{Pu_1} #1) #0)) ((AddCommMonoid.toAddMonoid.{Pu_1} #1) ((Semiring.toAddCommMonoid.{Pu_1} #1) #0))) ((Monoid.toMulAction.{Pu_1} #1) ((Semiring.toMonoid.{Pu_1} #1) #0))) ((Semiring.mul_zero.{Pu_1} #1) #0)) ((Semiring.toModule._proof_1.{Pu_1} #1) #0))) ((Semiring.toModule._proof_2.{Pu_1} #1) #0)) ((Semiring.zero_mul.{Pu_1} #1) #0))
+== StrictMono.orderIsoOfSurjective def type same value DIFF extra same
+  A val: fun Sort S(Pu_1), fun Sort S(Pu_2), fun (LinearOrder.{Pu_1} #1), fun (Preorder.{Pu_2} #1), fun Pi #3, #3, fun (((((StrictMono.{Pu_1,Pu_2} #4) #3) ((PartialOrder.toPreorder.{Pu_1} #4) ((SemilatticeInf.toPartialOrder.{Pu_1} #4) ((Lattice.toSemilatticeInf.{Pu_1} #4) ((DistribLattice.toLattice.{Pu_1} #4) ((instDistribLatticeOfLinearOrder.{Pu_1} #4) #2)))))) #1) #0), fun (((Function.Surjective.{S(Pu_1),S(Pu_2)} #5) #4) #1), ((((((((OrderIso.trans.{Pu_1,Pu_2,Pu_2} #6) ((Set.Elem.{Pu_2} #5) (((Set.range.{Pu_2,S(Pu_1)} #5) #6) #2))) #5) ((Preorder.toLE.{Pu_1} #6) ((PartialOrder.toPreorder.{Pu_1} #6) ((SemilatticeInf.toPartialOrder.{Pu_1} #6) ((Lattice.toSemilatticeInf.{Pu_1} #6) ((DistribLattice.toL
+  B val: fun Sort S(Pu_1), fun Sort S(Pu_2), fun (LinearOrder.{Pu_1} #1), fun (Preorder.{Pu_2} #1), fun Pi #3, #3, fun (((((StrictMono.{Pu_1,Pu_2} #4) #3) ((PartialOrder.toPreorder.{Pu_1} #4) ((SemilatticeInf.toPartialOrder.{Pu_1} #4) ((Lattice.toSemilatticeInf.{Pu_1} #4) ((DistribLattice.toLattice.{Pu_1} #4) ((instDistribLatticeOfLinearOrder.{Pu_1} #4) #2)))))) #1) #0), fun (((Function.Surjective.{S(Pu_1),S(Pu_2)} #5) #4) #1), ((((((((OrderIso.trans.{Pu_1,Pu_2,Pu_2} #6) ((Set.Elem.{Pu_2} #5) (((Set.range.{Pu_2,S(Pu_1)} #5) #6) #2))) #5) ((Preorder.toLE.{Pu_1} #6) ((PartialOrder.toPreorder.{Pu_1} #6) ((SemilatticeInf.toPartialOrder.{Pu_1} #6) ((Lattice.toSemilatticeInf.{Pu_1} #6) ((DistribLattice.toL
+== WellFoundedLT def type same value DIFF extra same
+  A val: fun Sort S(Pu_1), fun (LT.{Pu_1} #0), ((IsWellFounded.{Pu_1} #1) fun #1, fun #2, ((((LT.lt.{Pu_1} #3) #2) #1) #0))
+  B val: fun Sort S(Pu_1), fun (LT.{Pu_1} #0), ((WellFounded.{S(Pu_1)} #1) fun #1, fun #2, ((((LT.lt.{Pu_1} #3) #2) #1) #0))
+== WithTop.instLE def type same value DIFF extra same
+  A val: fun Sort S(Pu_1), fun (LE.{Pu_1} #0), ((LE.mk.{Pu_1} (WithTop.{Pu_1} #1)) fun (WithTop.{Pu_1} #1), fun (WithTop.{Pu_1} #2), ((((WithBot.LE.{Pu_1} (OrderDual.{Pu_1} #3)) ((OrderDual.instLE.{Pu_1} #3) #2)) #0) #1))
+  B val: fun Sort S(Pu_1), fun (LE.{Pu_1} #0), ((LE.mk.{Pu_1} (WithTop.{Pu_1} #1)) fun (WithTop.{Pu_1} #1), fun (WithTop.{Pu_1} #2), ((((WithTop.LE.{Pu_1} #3) #2) #1) #0))
+== WithTop.instLT def type same value DIFF extra same
+  A val: fun Sort S(Pu_1), fun (LT.{Pu_1} #0), ((LT.mk.{Pu_1} (WithTop.{Pu_1} #1)) fun (WithTop.{Pu_1} #1), fun (WithTop.{Pu_1} #2), ((((WithBot.LT.{Pu_1} (OrderDual.{Pu_1} #3)) ((OrderDual.instLT.{Pu_1} #3) #2)) #0) #1))
+  B val: fun Sort S(Pu_1), fun (LT.{Pu_1} #0), ((LT.mk.{Pu_1} (WithTop.{Pu_1} #1)) fun (WithTop.{Pu_1} #1), fun (WithTop.{Pu_1} #2), ((((WithTop.LT.{Pu_1} #3) #2) #1) #0))
+== instLEENat def type same value DIFF extra same
+  A val: ((LE.mk.{0} ENat) instLEENat._aux_1)
+  B val: ((LE.mk.{0} ENat) instLEENat._aux_1)
+== instLTENat def type same value DIFF extra same
+  A val: ((LT.mk.{0} ENat) instLTENat._aux_1)
+  B val: ((LT.mk.{0} ENat) instLTENat._aux_1)

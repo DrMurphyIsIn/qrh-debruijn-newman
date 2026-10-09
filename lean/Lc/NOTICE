@@ -1,0 +1,12 @@
+The files under this directory come from
+https://github.com/nicholasbulka/li-criterion-rh-equivalence-lean at commit
+35df682f3b709ffe5fbcfdd452dfa964bd622b87, licensed under the Apache License, Version 2.0
+(see LICENSE in that repository; https://www.apache.org/licenses/LICENSE-2.0).
+
+- XiZeros.lean: unmodified copy of Lc/XiZeros.lean.
+- LiCriterion/Basic.lean: MODIFIED. Trimmed to three declarations copied verbatim from upstream
+  Lc/LiCriterion/Basic.lean (lines 100-101, 1236-1237, 1559-1564); all other content was removed.
+  The modification is described in the file header.
+
+They are used only to build the Arda dbn island modules at OpenAI's Lean/Mathlib pin
+(see ../../README.md and telperion/docs/QRH_DBN_BRIDGE_2026-10-07.md section 6).
